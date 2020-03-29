@@ -13,11 +13,6 @@ sudo chown -R $USER:$USER /home/$USER
 git config --global user.email "mamutal91@gmail.com"
 git config --global user.name "Alexandre Rangel"
 
-# nginx
-sudo mkdir -p $HOME/.mamutal91/building
-sudo chown -R mamutal91:mamutal91 $HOME/.mamutal91/building
-sudo chmod -R 755 $HOME/.mamutal91/building
-
 # Set color in pacman
 sudo sed -i "s/#Color/Color/g" /etc/pacman.conf
 
