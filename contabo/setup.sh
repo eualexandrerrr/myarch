@@ -33,5 +33,5 @@ ln -s /bin/python3.8 $HOME/.bin/python
 chmod a+x $HOME/.bin/repo
 
 if [[ $USER == "mamutal91" ]]; then
-  ./.mysetup.sh
+  ./mysetup.sh
 fi
