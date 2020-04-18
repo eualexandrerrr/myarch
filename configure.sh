@@ -7,9 +7,12 @@ ln -s /hostlvm /run/lvm
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 
-sudo pacman -Sy reflector --needed --noconfirm && reflector -c Brazil --save /etc/pacman.d/mirrorlist
+echo "Config mirrors"
+#sudo pacman -Sy reflector --needed --noconfirm && reflector -c Brazil --save /etc/pacman.d/mirrorlist
+rm -rf /etc/pacman.d/mirrorlist
+mv files/mirrorlist /etc/pacman.d/
 
-sudo pacman -S efibootmgr git grub nano refind-efi sudo wget --needed --noconfirm
+sudo pacman -Sy efibootmgr git grub nano refind-efi sudo wget --needed --noconfirm
 
 echo "Set locale and zone"
 sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
