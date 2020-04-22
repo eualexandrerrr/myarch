@@ -14,7 +14,7 @@ pvcreate /dev/mapper/lvm
 vgcreate arch /dev/mapper/lvm
 
 lvcreate -L 80G arch -n root
-lvcreate -L 8G arch -n swap
+lvcreate -L 16G arch -n swap
 lvcreate -l 100%FREE arch -n home
 
 mkfs.ext4 /dev/mapper/arch-root
@@ -42,3 +42,5 @@ pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmw
 genfstab -U /mnt >> /mnt/etc/fstab
 
 arch-chroot /mnt
+
+echo ">>> arch-chroot /mnt <<<"
