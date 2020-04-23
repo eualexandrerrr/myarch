@@ -7,12 +7,17 @@ ln -s /hostlvm /run/lvm
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 
+modprobe zram
+echo lz4 > /sys/block/zram0/comp_algorithm
+sed -i "s/0/32GB/g" /sys/block/zram0/disksize
+mkswap --label zram0 /dev/zram0
+swapon --priority 100 /dev/zram0
+
 echo "Config mirrors"
-#sudo pacman -Sy reflector --needed --noconfirm && reflector -c Brazil --save /etc/pacman.d/mirrorlist
 rm -rf /etc/pacman.d/mirrorlist
 mv files/mirrorlist /etc/pacman.d/
 
-sudo pacman -Sy efibootmgr git grub nano refind-efi sudo wget --needed --noconfirm
+sudo pacman -Sy efibootmgr git grub nano refind sudo wget --needed --noconfirm
 
 echo "Set locale and zone"
 sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen
@@ -32,7 +37,7 @@ passwd root
 chown -R mamutal91:mamutal91 /home/mamutal91
 chmod +x /home/mamutal91
 
-git clone https://github.com/mamutal91/dotfiles $HOME/.dotfiles
+git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
 
 echo "Config sudoers"
 rm -rf /etc/sudoers

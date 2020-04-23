@@ -13,8 +13,8 @@ cryptsetup luksOpen /dev/sda2 lvm
 pvcreate /dev/mapper/lvm
 vgcreate arch /dev/mapper/lvm
 
-lvcreate -L 80G arch -n root
-lvcreate -L 16G arch -n swap
+lvcreate -L 40G arch -n root
+lvcreate -L 4G arch -n swap
 lvcreate -l 100%FREE arch -n home
 
 mkfs.ext4 /dev/mapper/arch-root
@@ -33,14 +33,3 @@ mount /dev/sda1 /mnt/boot
 
 swapon /dev/mapper/arch-swap
 mount --bind /run/lvm /mnt/hostlvm
-
-pacman -Sy reflector
-reflector -c Brazil --save /etc/pacman.d/mirrorlist
-
-pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio lvm2 --noconfirm
-
-genfstab -U /mnt >> /mnt/etc/fstab
-
-arch-chroot /mnt
-
-echo ">>> arch-chroot /mnt <<<"
