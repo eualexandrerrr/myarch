@@ -13,7 +13,7 @@ cryptsetup luksOpen /dev/sda2 lvm
 pvcreate /dev/mapper/lvm
 vgcreate arch /dev/mapper/lvm
 
-lvcreate -L 40G arch -n root
+lvcreate -L 30G arch -n root
 lvcreate -L 4G arch -n swap
 lvcreate -l 100%FREE arch -n home
 
