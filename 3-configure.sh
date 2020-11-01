@@ -26,7 +26,7 @@ sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
 sed -i "s/#pt_BR ISO-8859-1/pt_BR ISO-8859-1/g" /etc/locale.gen
 locale-gen
 echo LANG=pt_BR.UTF-8 > /etc/locale.conf
-echo odyssey > /etc/hostname
+echo aspire > /etc/hostname
 sudo ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 
 echo "Adding my user"
