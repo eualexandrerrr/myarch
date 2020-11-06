@@ -5,16 +5,16 @@
 mkfs.fat -F32 /dev/sda1
 
 cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
-#cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sdb1
+#cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
 
 cryptsetup luksOpen /dev/sda2 lvm
-#cryptsetup luksOpen /dev/sdb1 storage
+#cryptsetup luksOpen /dev/sda3 storage
 
 pvcreate /dev/mapper/lvm
 vgcreate arch /dev/mapper/lvm
 
-lvcreate -L 30G arch -n root
-lvcreate -L 4G arch -n swap
+lvcreate -L 100G arch -n root
+lvcreate -L 8G arch -n swap
 lvcreate -l 100%FREE arch -n home
 
 mkfs.ext4 /dev/mapper/arch-root
