@@ -56,8 +56,8 @@ sed -i "s/SEU_ID_AQUI/$UUID/g" files/grub
 rm -rf /etc/default/grub
 mv files/grub /etc/default
 
-pacman -Sy networkmanager --noconfirm
-systemctl enable NetworkManager
+pacman -Sy iwc --noconfirm
+systemctl enable iwd
 
 echo "Config grub"
 refind-install --usedefault /dev/sda1
