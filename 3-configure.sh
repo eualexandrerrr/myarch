@@ -56,7 +56,7 @@ sed -i "s/SEU_ID_AQUI/$UUID/g" files/grub
 rm -rf /etc/default/grub
 mv files/grub /etc/default
 
-pacman -Sy iwc --noconfirm
+pacman -Sy iwd --noconfirm
 systemctl enable iwd
 
 echo "Config grub"
