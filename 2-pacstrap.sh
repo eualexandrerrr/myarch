@@ -3,9 +3,7 @@
 
 source files/colors.sh
 
-#rm -rf /etc/pacman.d/mirrorlist
-#cp -rf files/mirrorlist /etc/pacman.d/
-pacman -Sy reflector && reflector --verbose --country 'Brazil' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
+curl -sSL 'https://www.archlinux.org/mirrorlist/?country=BR&protocol=http&protocol=https&ip_version=4' > /etc/pacman.d/mirrorlist
 
 pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio lvm2 --noconfirm
 
