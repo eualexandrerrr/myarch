@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
+source files/colors.sh
+
 #rm -rf /etc/pacman.d/mirrorlist
 #cp -rf files/mirrorlist /etc/pacman.d/
 pacman -Sy reflector && reflector --verbose --country 'Brazil' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
+source files/colors.sh
+
 ln -s /hostlvm /run/lvm
 
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf

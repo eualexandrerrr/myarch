@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
+source files/colors.sh
+
 mkfs.fat -F32 /dev/sda1
 
 cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
