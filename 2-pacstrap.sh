@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
-# https://www.youtube.com/channel/UCbTjvrgkddVv4iwC9P2jZFw
 
 #rm -rf /etc/pacman.d/mirrorlist
 #cp -rf files/mirrorlist /etc/pacman.d/
