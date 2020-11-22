@@ -1,4 +1,4 @@
-files/#!/usr/bin/env bash
+#!/usr/bin/env bash
 # github.com/mamutal91
 # https://www.youtube.com/channel/UCbTjvrgkddVv4iwC9P2jZFw
 
@@ -14,8 +14,9 @@ mkswap --label zram0 /dev/zram0
 swapon --priority 100 /dev/zram0
 
 echo "Config mirrors"
-rm -rf /etc/pacman.d/mirrorlist
-mv files/mirrorlist /etc/pacman.d/
+#rm -rf /etc/pacman.d/mirrorlist
+#mv files/mirrorlist /etc/pacman.d/
+sudo reflector --verbose --country 'Brazil' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
 
 sudo pacman -Sy efibootmgr git grub nano refind sudo wget --needed --noconfirm
 
