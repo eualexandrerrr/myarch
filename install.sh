@@ -34,3 +34,12 @@ mount /dev/sda1 /mnt/boot
 
 swapon /dev/mapper/arch-swap
 mount --bind /run/lvm /mnt/hostlvm
+
+pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio lvm2 --noconfirm
+
+genfstab -U /mnt >> /mnt/etc/fstab
+
+# Setup new system
+rm -rf /mnt/archlinux-installer && mkdir /mnt/archlinux-installer
+cp -r ./* /mnt/archlinux-installer/
+arch-chroot /mnt /archlinux-installer/setup.sh

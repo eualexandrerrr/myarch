@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
-source files/colors.sh
-
 ln -s /hostlvm /run/lvm
 
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 
-modprobe zram
-echo lz4 > /sys/block/zram0/comp_algorithm
-echo 32G > /sys/block/zram0/disksize
-mkswap --label zram0 /dev/zram0
-swapon --priority 100 /dev/zram0
+echo "Set zram"
+#modprobe zram
+#echo lz4 > /sys/block/zram0/comp_algorithm
+#echo 32G > /sys/block/zram0/disksize
+#mkswap --label zram0 /dev/zram0
+#swapon --priority 100 /dev/zram0
 
 echo "Config mirrors"
 #rm -rf /etc/pacman.d/mirrorlist
@@ -39,7 +38,7 @@ passwd root
 chown -R mamutal91:mamutal91 /home/mamutal91
 chmod +x /home/mamutal91
 
-git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
+git clone ssh://git@github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
 
 echo "Config sudoers"
 rm -rf /etc/sudoers
