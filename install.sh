@@ -39,7 +39,28 @@ pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmw
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
+# Up files
+rm -rf /mnt/etc/sudoers
+cp -rf files/sudoers /mnt/etc
+
+rm -rf /mnt/etc/mkinitcpio.conf
+cp -rf files/mkinitcpio.conf /mnt/etc
+
+# Config grub
+UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
+sed -i "s/ID_HERE/$UUID/g" files/grub
+rm -rf /mnt/etc/default/grub
+cp -rf files/grub /mnt/etc/default
+
 # Setup new system
 rm -rf /mnt/archlinux-installer && mkdir /mnt/archlinux-installer
 cp -r ./* /mnt/archlinux-installer/
 arch-chroot /mnt /archlinux-installer/setup.sh
+
+if [[ "$?" == "0" ]]; then
+  echo "Finished successfully."
+  read -r -p "Reboot now? [Y/n]" confirm
+  if [[ ! "$confirm" =~ ^(n|N) ]]; then
+    reboot
+  fi
+fi
