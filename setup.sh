@@ -43,7 +43,9 @@ mkinitcpio -p linux
 lsblk -fo +partuuid
 
 pacman -Sy iwd networkmanager --noconfirm
-systemctl enable iwd NetworkManager
+systemctl enable NetworkManager
+systemctl enable dhcpcd
+systemctl disable iwd
 
 echo "Config grub"
 refind-install --usedefault /dev/sda1
