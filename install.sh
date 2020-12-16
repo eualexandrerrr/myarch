@@ -35,7 +35,7 @@ mount /dev/sda1 /mnt/boot
 swapon /dev/mapper/arch-swap
 mount --bind /run/lvm /mnt/hostlvm
 
-pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio lvm2 --noconfirm
+pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio lvm2 pacman-contrib --noconfirm
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
