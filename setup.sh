@@ -28,10 +28,12 @@ echo aspire > /mnt/etc/hostname
 sudo ln -sf /mnt/usr/share/zoneinfo/America/Sao_Paulo /mnt/etc/localtime
 
 echo "Adding my user"
-useradd -m -G wheel -s /bin/bash mamutal91 && chmod +x /home/mamutal91 && chown -R mamutal91:mamutal91 /home/mamutal91
+useradd -m -G wheel -s /bin/bash mamutal91 && chmod +x /home/mamutal91
 clear
 passwd mamutal91
 passwd root
+chown -R mamutal91:mamutal91 /home/mamutal91
+chmod +x /home/mamutal91
 
 git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
 
