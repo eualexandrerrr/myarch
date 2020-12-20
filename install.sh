@@ -35,7 +35,18 @@ mount /dev/sda1 /mnt/boot
 swapon /dev/mapper/arch-swap
 mount --bind /run/lvm /mnt/hostlvm
 
-pacstrap -i /mnt base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio lvm2 pacman-contrib --noconfirm
+readonly PACKAGES=(
+  base-devel
+  bash-completion
+  linux linux-headers linux-firmware
+  lvm2
+  mkinitcpio
+  pacman-contrib
+)
+
+for i in "${PACKAGES[@]}"; do
+  pacstrap -i /mnt ${i} --noconfirm
+done
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
