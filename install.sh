@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
-source files/colors.sh
+#if [ ${1} = "open" ]; then
+#  cryptsetup luksOpen /dev/sda2 lvm
+#  mount /dev/mapper/arch-root /mnt
+#  mount /dev/sda1 /mnt/boot
+#  arch-chroot /mnt
+#else
 
 mkfs.fat -F32 /dev/sda1
 
@@ -36,42 +41,30 @@ swapon /dev/mapper/arch-swap
 mount --bind /run/lvm /mnt/hostlvm
 
 readonly PACKAGES=(
-  base-devel
+  base base-devel
   bash-completion
   linux linux-headers linux-firmware
   lvm2
   mkinitcpio
   pacman-contrib
+  iwd networkmanager dhcpcd sudo efibootmgr grub nano git
 )
 
 for i in "${PACKAGES[@]}"; do
-  pacstrap -i /mnt ${i} --noconfirm
+  pacstrap /mnt ${i} --noconfirm
 done
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
-# Up files
-rm -rf /mnt/etc/sudoers
-cp -rf files/sudoers /mnt/etc
-
-rm -rf /mnt/etc/mkinitcpio.conf
-cp -rf files/mkinitcpio.conf /mnt/etc
-
-# Config grub
-UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
-sed -i "s/ID_HERE/$UUID/g" files/grub
-rm -rf /mnt/etc/default/grub
-cp -rf files/grub /mnt/etc/default
-
 # Setup new system
-rm -rf /mnt/archlinux-installer && mkdir /mnt/archlinux-installer
-cp -r ./* /mnt/archlinux-installer/
-arch-chroot /mnt /archlinux-installer/setup.sh
+cp -r setup.sh /mnt
+arch-chroot /mnt ./setup.sh
 
-if [[ "$?" == "0" ]]; then
-  echo "Finished successfully."
-  read -r -p "Reboot now? [Y/n]" confirm
-  if [[ ! "$confirm" =~ ^(n|N) ]]; then
-    reboot
-  fi
-fi
+#if [[ "$?" == "0" ]]; then
+#  echo "Finished successfully."
+#  read -r -p "Reboot now? [Y/n]" confirm
+#  if [[ ! "$confirm" =~ ^(n|N) ]]; then
+#    reboot
+#  fi
+#fi
+#fi
