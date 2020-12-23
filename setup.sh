@@ -4,9 +4,9 @@
 ln -s /hostlvm /run/lvm
 
 echo "Config pacman"
-sed -i "/\[multilib\]/,/Include/"'s/^#//' /mnt/etc/pacman.conf
-sed -i "s/#Color/Color/g" /mnt/etc/pacman.conf
-sed -i "s/#TotalDownload/TotalDownload/g" /mnt/etc/pacman.conf
+sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+sed -i "s/#Color/Color/g" /etc/pacman.conf
+sed -i "s/#TotalDownload/TotalDownload/g" /etc/pacman.conf
 
 echo "Set locale and zone"
 sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
@@ -25,7 +25,8 @@ echo "Config sudoers"
 sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\nmamutal91 ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 
 # systemd
-sed -i "s/#HandleLidSwitch=ignore/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
+sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
+sed -i "s/#NAutoVTs=6/NAutoVTs=6/g" /etc/systemd/logind.conf
 
 echo "Config grub"
 UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
