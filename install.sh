@@ -1,71 +1,83 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
-#if [ ${1} = "open" ]; then
-#  cryptsetup luksOpen /dev/sda2 lvm
-#  mount /dev/mapper/arch-root /mnt
-#  mount /dev/sda1 /mnt/boot
-#  arch-chroot /mnt
-#else
+function boot() {
+  cryptsetup luksOpen /dev/sda2 lvm
+  wait
+  mount /dev/mapper/arch-root /mnt
+  wait
+  arch-chroot /mnt
+}
 
-mkfs.fat -F32 /dev/sda1
+function format() {
+  mkfs.fat -F32 /dev/sda1
 
-cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
-#cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
+  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
 
-cryptsetup luksOpen /dev/sda2 lvm
-#cryptsetup luksOpen /dev/sda3 storage
-#mkfs.ext4 /dev/mapper/storage
+  # storage
+  #cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
+  #cryptsetup luksOpen /dev/sda3 storage
+  #mkfs.ext4 /dev/mapper/storage
 
-pvcreate /dev/mapper/lvm
-vgcreate arch /dev/mapper/lvm
+  cryptsetup luksOpen /dev/sda2 lvm
 
-lvcreate -L 100G arch -n root
-lvcreate -L 8G arch -n swap
-lvcreate -l 100%FREE arch -n home
+  pvcreate /dev/mapper/lvm
+  vgcreate arch /dev/mapper/lvm
 
-mkfs.ext4 /dev/mapper/arch-root
-mkfs.ext4 /dev/mapper/arch-home
-mkswap /dev/mapper/arch-swap
+  lvcreate -L 100G arch -n root
+  lvcreate -L 8G arch -n swap
+  lvcreate -l 100%FREE arch -n home
 
-mount /dev/mapper/arch-root /mnt
+  mkfs.ext4 /dev/mapper/arch-root
+  mkfs.ext4 /dev/mapper/arch-home
+  mkswap /dev/mapper/arch-swap
 
-mkdir /mnt/home
-mkdir /mnt/boot
-mkdir -p /mnt/media/storage
-mkdir /mnt/hostlvm
+  mount /dev/mapper/arch-root /mnt
 
-mount /dev/mapper/arch-home /mnt/home
-mount /dev/sda1 /mnt/boot
+  mkdir /mnt/home
+  mkdir /mnt/boot
+  mkdir -p /mnt/media/storage
+  mkdir /mnt/hostlvm
 
-swapon /dev/mapper/arch-swap
-mount --bind /run/lvm /mnt/hostlvm
+  mount /dev/mapper/arch-home /mnt/home
+  mount /dev/sda1 /mnt/boot
 
-readonly PACKAGES=(
-  base base-devel
-  bash-completion
-  linux linux-headers linux-firmware
-  lvm2
-  mkinitcpio
-  pacman-contrib
-  iwd networkmanager dhcpcd sudo efibootmgr grub nano git
-)
+  swapon /dev/mapper/arch-swap
+  mount --bind /run/lvm /mnt/hostlvm
 
-for i in "${PACKAGES[@]}"; do
-  pacstrap /mnt ${i} --noconfirm
-done
+  readonly PACKAGES=(
+    base base-devel
+    bash-completion
+    linux linux-headers linux-firmware
+    lvm2
+    mkinitcpio
+    pacman-contrib
+    iwd networkmanager dhcpcd sudo efibootmgr grub nano git
+  )
 
-genfstab -U /mnt >> /mnt/etc/fstab
+  for i in "${PACKAGES[@]}"; do
+    pacstrap /mnt ${i} --noconfirm
+  done
 
-# Setup new system
-cp -r setup.sh /mnt
-arch-chroot /mnt ./setup.sh
+  genfstab -U /mnt >> /mnt/etc/fstab
 
-#if [[ "$?" == "0" ]]; then
-#  echo "Finished successfully."
-#  read -r -p "Reboot now? [Y/n]" confirm
-#  if [[ ! "$confirm" =~ ^(n|N) ]]; then
-#    reboot
-#  fi
-#fi
-#fi
+  # setup new system
+  cp -r setup.sh /mnt
+  arch-chroot /mnt ./setup.sh
+}
+
+if [ "${1}" = "boot" ];
+then
+  boot
+else
+  format
+fi
+
+# reboot
+if [[ "$?" == "0" ]]; then
+  echo "Finished successfully."
+  read -r -p "Reboot now? [Y/n]" confirm
+  if [[ ! "$confirm" =~ ^(n|N) ]]; then
+    reboot
+  fi
+fi
