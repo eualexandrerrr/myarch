@@ -15,6 +15,7 @@ cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /d
 
 cryptsetup luksOpen /dev/sda2 lvm
 #cryptsetup luksOpen /dev/sda3 storage
+#mkfs.ext4 /dev/mapper/storage
 
 pvcreate /dev/mapper/lvm
 vgcreate arch /dev/mapper/lvm
