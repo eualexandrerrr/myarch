@@ -28,6 +28,20 @@ sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\nmamutal91 ALL=(ALL) N
 sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
 sed -i "s/#NAutoVTs=6/NAutoVTs=6/g" /etc/systemd/logind.conf
 
+# mount storage encrypt
+cryptsetup luksOpen /dev/sda3 storage
+dd if=/dev/urandom of=/boot/keyfile bs=1024 count=4
+chmod 0400 /boot/keyfile
+cryptsetup -v luksAddKey /dev/sda3 /boot/keyfile
+
+UUID=$(blkid /dev/sda3 | awk -F '"' '{print $2}')
+crypttab="storage UUID=$UUID /boot/keyfile luks"
+echo "" >> /etc/crypttab
+echo $crypttab >> /etc/crypttab
+
+echo "" >> /etc/fstab
+echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2"
+
 echo "Config grub"
 UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
 sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor acpi_osi=Linux"/g' /etc/default/grub
