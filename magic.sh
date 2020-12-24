@@ -46,8 +46,7 @@ function format() {
   mount --bind /run/lvm /mnt/hostlvm
 
   readonly PACKAGES=(
-    base base-devel
-    bash-completion
+    base base-devel bash-completion
     linux linux-headers linux-firmware
     lvm2
     mkinitcpio
@@ -62,6 +61,8 @@ function format() {
   genfstab -U /mnt >> /mnt/etc/fstab
 
   # setup new system
+  wget https://raw.githubusercontent.com/mamutal91/myarch/master/setup.sh
+  chmod +x setup.sh
   cp -r setup.sh /mnt
   arch-chroot /mnt ./setup.sh
 }
