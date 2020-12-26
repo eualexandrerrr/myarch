@@ -11,9 +11,6 @@ function boot() {
 
 function format() {
 
-  echo "Formatting sda2"
-  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
-
   read -e -p "
   You username? " USERNAME
   echo $USERNAME
@@ -25,6 +22,9 @@ function format() {
   read -e -p "
   Do you want to format the storage /dev/sda3? [Yy | Nn]" YN
   echo $YN
+
+  echo "Formatting /dev/sda2"
+  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
 
   if [[ $YN == "n" || $YN == "N" || $YN == "" ]]
   then
