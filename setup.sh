@@ -8,13 +8,16 @@ sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 sed -i "s/#TotalDownload/TotalDownload/g" /etc/pacman.conf
 
-echo "Set locale and zone"
-sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
-sed -i "s/#pt_BR ISO-8859-1/pt_BR ISO-8859-1/g" /etc/locale.gen
+if [[ $USERNAME = "mamutal91" ]]; then
+  echo "Set locale and zone"
+  sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
+  sed -i "s/#pt_BR ISO-8859-1/pt_BR ISO-8859-1/g" /etc/locale.gen
+  echo LANG=pt_BR.UTF-8 > /etc/locale.conf
+  sudo ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+if
 locale-gen
-echo LANG=pt_BR.UTF-8 > /etc/locale.conf
-echo kickapoo > /etc/hostname
-sudo ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+
+echo $HOSTNAME > /etc/hostname
 
 echo "Config mkinitpcio"
 sed -i "s/block/block encrypt lvm2/g" /etc/mkinitcpio.conf
@@ -22,7 +25,7 @@ sed -i "s/block/block encrypt lvm2/g" /etc/mkinitcpio.conf
 mkinitcpio -P
 
 echo "Config sudoers"
-sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\nmamutal91 ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
+sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 
 # systemd
 sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
@@ -53,12 +56,14 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Add my user"
-useradd -m -G wheel -s /bin/bash mamutal91
-mkdir -p /home/mamutal91
-passwd mamutal91
+useradd -m -G wheel -s /bin/bash $USERNAME
+mkdir -p /home/$USERNAME
+passwd $USERNAME
 passwd root
 
-git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
+if [[ $USERNAME = "mamutal91" ]]; then
+  git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
+fi
 
 systemctl enable NetworkManager
 systemctl enable dhcpcd
