@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# github.com/mamutal91
 
 function boot() {
   cryptsetup luksOpen /dev/sda2 lvm

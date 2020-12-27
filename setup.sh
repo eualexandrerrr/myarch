@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# github.com/mamutal91
 
 USERNAME=mamutal91
 HOSTNAME=odin
