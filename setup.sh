@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # github.com/mamutal91
 
+USERNAME=mamutal91
+HOSTNAME=odin
+
 ln -s /hostlvm /run/lvm
 
 echo "Config pacman"
@@ -37,7 +40,6 @@ passwd $USERNAME
 passwd root
 
 if [[ $USERNAME = "mamutal91" ]]; then
-  # mount storage encrypt
   cryptsetup luksOpen /dev/sda3 storage
   dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
   chmod 0400 /root/keyfile

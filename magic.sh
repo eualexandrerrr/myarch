@@ -11,33 +11,13 @@ function boot() {
 
 function format() {
 
-  read -e -p "
-  You username? " USERNAME
-  echo $USERNAME
-
-  read -e -p "
-  You hostname? " HOSTNAME
-  echo $HOSTNAME
-
-  read -e -p "
-  Do you want to format the storage /dev/sda3? [Yy | Nn]" YN
-  echo $YN
-
   echo "Formatting /dev/sda2"
   cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
 
-  if [[ $YN == "n" || $YN == "N" || $YN == "" ]]
-  then
-    echo "I will not format the storage"
-  else
-    echo "Formatting storage"
-    cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
-    cryptsetup luksOpen /dev/sda3 storage
-    mkfs.ext4 /dev/mapper/storage
-    echo "Vou formatar"
-  fi
-
-  # storage
+  #echo "Formatting storage"
+  #cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
+  #cryptsetup luksOpen /dev/sda3 storage
+  #mkfs.ext4 /dev/mapper/storage
 
   cryptsetup luksOpen /dev/sda2 lvm
 
