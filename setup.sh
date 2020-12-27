@@ -65,6 +65,6 @@ locale-gen
 
 echo $HOSTNAME > /etc/hostname
 
-systemctl enable NetworkManager
+systemctl disable NetworkManager
 systemctl enable dhcpcd
-systemctl disable iwd
+systemctl enable iwd
