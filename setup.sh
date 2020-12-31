@@ -39,18 +39,18 @@ passwd $USERNAME
 passwd root
 
 if [[ $USERNAME = "mamutal91" ]]; then
-  cryptsetup luksOpen /dev/sda3 storage
-  dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
-  chmod 0400 /root/keyfile
-  cryptsetup -v luksAddKey /dev/sda3 /root/keyfile
+#  cryptsetup luksOpen /dev/sda3 storage
+#  dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
+#  chmod 0400 /root/keyfile
+#  cryptsetup -v luksAddKey /dev/sda3 /root/keyfile
 
-  UUID=$(blkid /dev/sda3 | awk -F '"' '{print $2}')
-  crypttab="storage UUID=$UUID /root/keyfile luks"
-  echo "" >> /etc/crypttab
-  echo $crypttab >> /etc/crypttab
+#  UUID=$(blkid /dev/sda3 | awk -F '"' '{print $2}')
+#  crypttab="storage UUID=$UUID /root/keyfile luks"
+#  echo "" >> /etc/crypttab
+#  echo $crypttab >> /etc/crypttab
 
-  echo "" >> /etc/fstab
-  echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2"
+#  echo "" >> /etc/fstab
+#  echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2"
 
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
 fi
