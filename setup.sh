@@ -55,7 +55,8 @@ if [[ $USERNAME = "mamutal91" ]]; then
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
 fi
 
-echo "Set locale and zone"
+echo "Set locale, zone and keymap console"
+echo KEYMAP=br-abnt2 > /etc/vconsole.conf
 sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
 sed -i "s/#pt_BR ISO-8859-1/pt_BR ISO-8859-1/g" /etc/locale.gen
 echo LANG=pt_BR.UTF-8 > /etc/locale.conf
