@@ -44,6 +44,8 @@ function format() {
   swapon /dev/mapper/arch-swap
   mount --bind /run/lvm /mnt/hostlvm
 
+  pacman -Sy reflector && reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+
   readonly PACKAGES=(
     base base-devel bash-completion
     linux linux-headers linux-firmware
