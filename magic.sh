@@ -23,7 +23,7 @@ function format() {
   pvcreate /dev/mapper/lvm
   vgcreate arch /dev/mapper/lvm
 
-  lvcreate -L 100G arch -n root
+  lvcreate -L 25G arch -n root
   lvcreate -L 8G arch -n swap
   lvcreate -l 100%FREE arch -n home
 
