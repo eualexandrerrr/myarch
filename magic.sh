@@ -18,21 +18,25 @@ function format() {
   vgcreate arch /dev/mapper/lvm
 
   lvcreate -L 25G arch -n root
-  lvcreate -L 8G arch -n swap
   lvcreate -l 100%FREE arch -n home
 
   mkfs.fat -F32 /dev/sda1
   mkfs.ext4 /dev/mapper/arch-root
   mkfs.ext4 /dev/mapper/arch-home
-  mkswap /dev/mapper/arch-swap
 
   mount /dev/mapper/arch-root /mnt
   mount /dev/mapper/arch-home /mnt/home
   mount /dev/sda1 /mnt/boot
   mkdir -p /mnt/{home,boot,hostlvm}
 
-  swapon /dev/mapper/arch-swap
   mount --bind /run/lvm /mnt/hostlvm
+
+  echo "Config zRam"
+  modprobe zram
+  echo lz4 > /mnt/sys/block/zram0/comp_algorithm
+  echo 32G > /mnt/sys/block/zram0/disksize
+  mkswap --label zram0 /mnt/dev/zram0
+  swapon --priority 100 /mnt/dev/zram0
 
   readonly PACKAGES=(
     base base-devel bash-completion
