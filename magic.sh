@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function boot() {
+function recovery() {
   cryptsetup luksOpen /dev/sda2 lvm
   wait
   mount /dev/mapper/arch-root /mnt
@@ -27,13 +27,9 @@ function format() {
   mkswap /dev/mapper/arch-swap
 
   mount /dev/mapper/arch-root /mnt
-  mkdir /mnt/home
-  mkdir /mnt/boot
-  mkdir -p /mnt/media/storage
-  mkdir /mnt/hostlvm
-
   mount /dev/mapper/arch-home /mnt/home
   mount /dev/sda1 /mnt/boot
+  mkdir -p /mnt/{home,boot,hostlvm}
 
   swapon /dev/mapper/arch-swap
   mount --bind /run/lvm /mnt/hostlvm
@@ -60,9 +56,9 @@ function format() {
   arch-chroot /mnt ./setup.sh
 }
 
-if [ "${1}" = "boot" ];
+if [ "${1}" = "recovery" ];
 then
-  boot
+  recovery
 else
   format
 fi
