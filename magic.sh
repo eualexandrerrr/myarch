@@ -25,9 +25,9 @@ function format() {
   mkfs.ext4 /dev/mapper/arch-home
 
   mount /dev/mapper/arch-root /mnt
+  mkdir -p /mnt/{home,boot,hostlvm}
   mount /dev/mapper/arch-home /mnt/home
   mount /dev/sda1 /mnt/boot
-  mkdir -p /mnt/{home,boot,hostlvm}
 
   mount --bind /run/lvm /mnt/hostlvm
 
