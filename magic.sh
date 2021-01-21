@@ -12,12 +12,6 @@ function format() {
 
   echo "Formatting /dev/sda2"
   cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
-
-  #echo "Formatting storage"
-  #cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
-  #cryptsetup luksOpen /dev/sda3 storage
-  #mkfs.ext4 /dev/mapper/storage
-
   cryptsetup luksOpen /dev/sda2 lvm
 
   pvcreate /dev/mapper/lvm
