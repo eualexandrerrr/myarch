@@ -35,8 +35,6 @@ grub-mkconfig -o /boot/grub/grub.cfg
 echo "Add my user"
 useradd -m -G wheel -s /bin/bash $USERNAME
 mkdir -p /home/$USERNAME
-passwd $USERNAME
-passwd root
 
 if [[ $USERNAME = "mamutal91" ]]; then
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
@@ -57,3 +55,7 @@ modprobe zram
 systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
+
+# Set passwords
+passwd $USERNAME
+passwd root
