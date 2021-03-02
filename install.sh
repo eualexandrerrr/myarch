@@ -37,7 +37,7 @@ if [[ ${1} == recovery ]]; then
   mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
   mount $DISK1 /mnt/boot
   sleep 5
-  arch-chroot
+  arch-chroot /mnt
 else
   # Format the drive
   sgdisk -g --clear \
