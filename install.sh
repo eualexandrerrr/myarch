@@ -10,17 +10,18 @@ echo -e "$HOSTNAME\n"
 clear
 
 if [[ $USERNAME == mamutal91 ]]; then
-  DISK=/dev/nvme0n1 # nvme
+  formatStorage=true
+  DISK=/dev/sdb # ssd m2 sata
+  DISK1=/dev/sdb1 # EFI (boot)
+  DISK2=/dev/sdb2 # cryptswap
+  DISK3=/dev/sdb3 # cryptsystem
+  STORAGE=/dev/sda1 # storage
+else
+  DISK=/dev/nvme0n1 # ssd m2 nvme
   DISK1=/dev/nvme0n1p1 # EFI (boot)
   DISK2=/dev/nvme0n1p2 # cryptswap
   DISK3=/dev/nvme0n1p3 # cryptsystem
   STORAGE=/dev/sda1 # storage
-else
-  DISK=/dev/sda # nvme
-  DISK1=/dev/sda1 # EFI (boot)
-  DISK2=/dev/sda2 # cryptswap
-  DISK3=/dev/sda3 # cryptsystem
-  STORAGE=/dev/sdb1 # storage
 fi
 
 [[ $USERNAME == mamutal91 ]] && git config --global user.email "mamutal91@gmail.com" && git config --global user.name "Alexandre Rangel"
@@ -39,6 +40,23 @@ if [[ ${1} == recovery ]]; then
   sleep 5
   arch-chroot /mnt
 else
+  # Format and encrypt the storage partition
+  if [[ $formatStorage == true ]]; then
+    sgdisk -g --clear \
+      --new=1:0:0       --typecode=3:8300 --change-name=1:storage \
+      $STORAGE
+    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE
+    if [[ $? -eq 0 ]]; then
+      echo "cryptsetup luksFormat SUCCESS {STORAGE}"
+    else
+      echo "cryptsetup luksFormat FAILURE {STORAGE}"
+      exit 1
+    fi
+    cryptsetup luksOpen $STORAGE storage
+    mkfs.btrfs --force --label storage /dev/mapper/storage
+    cryptsetup luksOpen $STORAGE storage
+  fi
+
   # Format the drive
   sgdisk -g --clear \
     --new=1:0:+1GiB   --typecode=1:ef00 --change-name=1:EFI \
@@ -61,16 +79,6 @@ else
     exit 1
   fi
   cryptsetup open $DISK3 system
-
-  if [[ ${1} == storage ]]; then
-    HAVE_STORAGE=true
-    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE
-    cryptsetup luksOpen $STORAGE storage
-    mkfs.btrfs --force --label storage /dev/mapper/storage
-    cryptsetup luksOpen $STORAGE storage
-  else
-    HAVE_STORAGE=false
-  fi
 
   # Enable encrypted swap partition
   cryptsetup open --type plain --key-file /dev/urandom $DISK2 swap
@@ -103,11 +111,11 @@ else
   sed -i "s/#Color/Color/g" /etc/pacman.conf
   sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 50/g" /etc/pacman.conf
+  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 100/g" /etc/pacman.conf
 
   # Install base system and some basic tools
   pacstrap /mnt --noconfirm \
-    base base-devel bash-completion linux-lts linux linux-headers linux-firmware mkinitcpio pacman-contrib \
+    base base-devel bash-completion linux-lts linux-lts-headers linux linux-headers linux-firmware mkinitcpio pacman-contrib \
     btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
     iwd networkmanager dhcpcd sudo grub nano git reflector wget openssh zsh git curl wget
 
@@ -128,8 +136,7 @@ else
   sed -i "3i HOSTNAME=$HOSTNAME" pos-install.sh
   sed -i "4i DISK2=$DISK2" pos-install.sh
   sed -i "5i DISK3=$DISK3" pos-install.sh
-  sed -i "6i STORAGE=$STORAGE" pos-install.sh
-  sed -i "7i HAVE_STORAGE=$HAVE_STORAGE" pos-install.sh
+  sed -i "6i STORAGE=/dev/sda1" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
