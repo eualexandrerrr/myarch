@@ -15,13 +15,15 @@ if [[ $USERNAME == mamutal91 ]]; then
   DISK1=/dev/sdb1 # EFI (boot)
   DISK2=/dev/sdb2 # cryptswap
   DISK3=/dev/sdb3 # cryptsystem
-  STORAGE=/dev/nvme0n1 # storage
+  STORAGE1=/dev/nvme0n1 # storage
+  STORAGE2=/dev/sda1 # storage hdd
 else
   DISK=/dev/nvme0n1 # ssd m2 nvme
   DISK1=/dev/nvme0n1p1 # EFI (boot)
   DISK2=/dev/nvme0n1p2 # cryptswap
   DISK3=/dev/nvme0n1p3 # cryptsystem
-  STORAGE=/dev/sda1 # storage
+  STORAGE1=/dev/sdb1 # storage
+  STORAGE2=/dev/sda1 # storage hdd
 fi
 
 [[ $USERNAME == mamutal91 ]] && git config --global user.email "mamutal91@gmail.com" && git config --global user.name "Alexandre Rangel"
@@ -44,17 +46,17 @@ else
   if [[ $formatStorage == true ]]; then
     sgdisk -g --clear \
       --new=1:0:0       --typecode=3:8300 --change-name=1:storage \
-      $STORAGE
-    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE
+      $STORAGE1
+    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE1
     if [[ $? -eq 0 ]]; then
-      echo "cryptsetup luksFormat SUCCESS ${STORAGE}"
+      echo "cryptsetup luksFormat SUCCESS ${STORAGE1}"
     else
-      echo "cryptsetup luksFormat FAILURE ${STORAGE}"
+      echo "cryptsetup luksFormat FAILURE ${STORAGE1}"
       exit 1
     fi
-    cryptsetup luksOpen $STORAGE storage
+    cryptsetup luksOpen $STORAGE1 storage
     mkfs.btrfs --force --label storage /dev/mapper/storage
-    cryptsetup luksOpen $STORAGE storage
+    cryptsetup luksOpen $STORAGE1 storage
   fi
 
   # Format the drive
@@ -132,11 +134,11 @@ else
   cp -rf /var/lib/iwd/*.psk /mnt/var/lib/iwd
 
   # Arch Chroot
-  sed -i "2i USERNAME=$USERNAME" pos-install.sh
-  sed -i "3i HOSTNAME=$HOSTNAME" pos-install.sh
-  sed -i "4i DISK2=$DISK2" pos-install.sh
-  sed -i "5i DISK3=$DISK3" pos-install.sh
-  sed -i "6i STORAGE=$STORAGE" pos-install.sh
+  sed -i "2i USERNAME=${USERNAME}" pos-install.sh
+  sed -i "3i HOSTNAME=${HOSTNAME}" pos-install.sh
+  sed -i "4i DISK2=${DISK2}" pos-install.sh
+  sed -i "5i DISK3=${DISK3}" pos-install.sh
+  sed -i "6i STORAGE=${STORAGE1}" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then

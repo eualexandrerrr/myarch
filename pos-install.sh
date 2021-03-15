@@ -92,16 +92,17 @@ sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /e
 
 # My notebook
 if [[ $USERNAME == mamutal91 ]]; then
-  STORAGE_UUID=$(blkid $STORAGE | awk -F '"' '{print $2}')
+  # Storage 1
+  STORAGE1_UUID=$(blkid $STORAGE1 | awk -F '"' '{print $2}')
   mkdir -p /mnt/storage
-  echo -e "\nstorage UUID=$STORAGE_UUID /root/keyfile luks" >> /etc/crypttab
+  echo -e "\nstorage UUID=$STORAGE1_UUID /root/keyfile luks" >> /etc/crypttab
   echo -e "\n# Storage" >> /etc/fstab
   echo "/dev/mapper/storage  /mnt/storage     btrfs    defaults        0       2" >> /etc/fstab
   dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
   chmod 0400 /root/keyfile
   clear
-  echo "Type crypt password $STORAGE"
-  cryptsetup -v luksAddKey $STORAGE /root/keyfile
+  echo "Type crypt password $STORAGE1"
+  cryptsetup -v luksAddKey $STORAGE1 /root/keyfile
 fi
 
 # Define passwords
