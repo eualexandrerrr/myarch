@@ -10,20 +10,30 @@ echo -e "$HOSTNAME\n"
 clear
 
 if [[ $USERNAME == mamutal91 ]]; then
-  formatStorage=true
   DISK=/dev/sdb # ssd m2 sata
   DISK1=/dev/sdb1 # EFI (boot)
   DISK2=/dev/sdb2 # cryptswap
   DISK3=/dev/sdb3 # cryptsystem
   STORAGE1=/dev/nvme0n1 # storage
-  STORAGE2=/dev/sda1 # storage hdd
+  STORAGE2=/dev/sda # storage hdd
+  echo -n "Você deseja formatar o storage ${STORAGE1}? (y/n)? "; read answer
+  if [[ $answer != ${answer#[Yy]} ]]; then
+    echo -n "Você tem certeza? (y/n)? "; read answer
+    if [[ $answer != ${answer#[Yy]} ]]; then
+      formatStorage=true
+    else
+      echo No format ${STORAGE1}
+    fi
+  else
+    echo No format ${STORAGE1}
+  fi
 else
   DISK=/dev/nvme0n1 # ssd m2 nvme
   DISK1=/dev/nvme0n1p1 # EFI (boot)
   DISK2=/dev/nvme0n1p2 # cryptswap
   DISK3=/dev/nvme0n1p3 # cryptsystem
-  STORAGE1=/dev/sdb1 # storage
-  STORAGE2=/dev/sda1 # storage hdd
+  STORAGE1=/dev/sdb # storage
+  STORAGE2=/dev/sda # storage hdd
 fi
 
 [[ $USERNAME == mamutal91 ]] && git config --global user.email "mamutal91@gmail.com" && git config --global user.name "Alexandre Rangel"
