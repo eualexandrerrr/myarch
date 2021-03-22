@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function recovery() {
   cryptsetup luksOpen /dev/sda2 lvm
