@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 USERNAME=mamutal91
 HOSTNAME=odin
