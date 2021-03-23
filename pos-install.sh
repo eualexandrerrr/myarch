@@ -91,7 +91,7 @@ sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) N
 sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 
 # My notebook
-if [[ $USERNAME == mamutal91 ]]; then
+mountStorages() {
   # Storage 1
   STORAGE1_UUID=$(blkid $STORAGE1 | awk -F '"' '{print $2}')
   mkdir -p /mnt/storage
@@ -103,6 +103,22 @@ if [[ $USERNAME == mamutal91 ]]; then
   clear
   echo "Type crypt password $STORAGE1"
   cryptsetup -v luksAddKey $STORAGE1 /root/keyfile
+
+  # Storage 2
+  STORAGE2_UUID=$(blkid $STORAGE2 | awk -F '"' '{print $2}')
+  mkdir -p /mnt/hdd
+  echo -e "\nstorage UUID=$STORAGE2_UUID /root/keyfile luks" >> /etc/crypttab
+  echo -e "\n# Storage" >> /etc/fstab
+  echo "/dev/mapper/hdd  /mnt/hdd     btrfs    defaults        0       2" >> /etc/fstab
+  dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
+  chmod 0400 /root/keyfile
+  clear
+  echo "Type crypt password $STORAGE2"
+  cryptsetup -v luksAddKey $STORAGE2 /root/keyfile
+}
+
+if [[ $USERNAME == mamutal91 ]]; then
+  mountStorages
 fi
 
 # Define passwords

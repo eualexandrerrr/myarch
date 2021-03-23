@@ -16,17 +16,33 @@ if [[ $USERNAME == mamutal91 ]]; then
   DISK3=/dev/sdb3 # cryptsystem
   STORAGE1=/dev/nvme0n1 # storage
   STORAGE2=/dev/sda # storage hdd
-  echo -n "Você deseja formatar o storage ${STORAGE1}? (y/n)? "; read answer
-  if [[ $answer != ${answer#[Yy]} ]]; then
-    echo -n "Você tem certeza? (y/n)? "; read answer
+  askFormatStorages() {
+    echo -n "Você deseja formatar o storage ${STORAGE1} (nvme)? (y/n)? "; read answer
     if [[ $answer != ${answer#[Yy]} ]]; then
-      formatStorage=true
+      echo -n "Você tem certeza? (y/n)? "; read answer
+      if [[ $answer != ${answer#[Yy]} ]]; then
+        formatStorage1=true
+      else
+        formatStorage1=false
+        echo No format ${STORAGE1}
+      fi
     else
       echo No format ${STORAGE1}
     fi
-  else
-    echo No format ${STORAGE1}
-  fi
+    echo -n "Você deseja formatar o storage ${STORAGE2} (hdd)? (y/n)? "; read answer
+    if [[ $answer != ${answer#[Yy]} ]]; then
+      echo -n "Você tem certeza? (y/n)? "; read answer
+      if [[ $answer != ${answer#[Yy]} ]]; then
+        formatStorage2=true
+      else
+        formatStorage2=false
+        echo No format ${STORAGE2}
+      fi
+    else
+      echo No format ${STORAGE2}
+    fi
+  }
+  askFormatStorages
 else
   DISK=/dev/nvme0n1 # ssd m2 nvme
   DISK1=/dev/nvme0n1p1 # EFI (boot)
@@ -52,22 +68,42 @@ if [[ ${1} == recovery ]]; then
   sleep 5
   arch-chroot /mnt
 else
-  # Format and encrypt the storage partition
-  if [[ $formatStorage == true ]]; then
-    sgdisk -g --clear \
-      --new=1:0:0       --typecode=3:8300 --change-name=1:storage \
-      $STORAGE1
-    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE1
-    if [[ $? -eq 0 ]]; then
-      echo "cryptsetup luksFormat SUCCESS ${STORAGE1}"
-    else
-      echo "cryptsetup luksFormat FAILURE ${STORAGE1}"
-      exit 1
+  formatStorages() {
+    # Format and encrypt the storage partition 1
+    if [[ $formatStorage1 == true ]]; then
+      sgdisk -g --clear \
+        --new=1:0:0       --typecode=3:8300 --change-name=1:storage \
+        $STORAGE1
+      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE1
+      if [[ $? -eq 0 ]]; then
+        echo "cryptsetup luksFormat SUCCESS ${STORAGE1}"
+      else
+        echo "cryptsetup luksFormat FAILURE ${STORAGE1}"
+        exit 1
+      fi
+      cryptsetup luksOpen $STORAGE1 storage
+      mkfs.btrfs --force --label storage /dev/mapper/storage
+      cryptsetup luksOpen $STORAGE1 storage
     fi
-    cryptsetup luksOpen $STORAGE1 storage
-    mkfs.btrfs --force --label storage /dev/mapper/storage
-    cryptsetup luksOpen $STORAGE1 storage
-  fi
+
+    # Format and encrypt the storage partition 1
+    if [[ $formatStorage2 == true ]]; then
+      sgdisk -g --clear \
+        --new=1:0:0       --typecode=3:8300 --change-name=1:hdd \
+        $STORAGE2
+      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE2
+      if [[ $? -eq 0 ]]; then
+        echo "cryptsetup luksFormat SUCCESS ${STORAGE2}"
+      else
+        echo "cryptsetup luksFormat FAILURE ${STORAGE2}"
+        exit 1
+      fi
+      cryptsetup luksOpen $STORAGE2 hdd
+      mkfs.btrfs --force --label hdd /dev/mapper/hdd
+      cryptsetup luksOpen $STORAGE2 hdd
+    fi
+  }
+  formatStorages
 
   # Format the drive
   sgdisk -g --clear \
@@ -149,6 +185,7 @@ else
   sed -i "4i DISK2=${DISK2}" pos-install.sh
   sed -i "5i DISK3=${DISK3}" pos-install.sh
   sed -i "6i STORAGE=${STORAGE1}" pos-install.sh
+  sed -i "7i STORAGE=${STORAGE2}" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
