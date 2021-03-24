@@ -1,9 +1,6 @@
 # myarch
 ---
 
-- Run:
-- `curl -L git.io/myarch | bash`
-
 # requirements
 ---
 To use this script, make sure your disk is formatted in GPT, with UEFI boot enabled.

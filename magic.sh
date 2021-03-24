@@ -54,9 +54,7 @@ function format() {
   genfstab -U /mnt >> /mnt/etc/fstab
 
   # setup new system
-  wget https://raw.githubusercontent.com/mamutal91/myarch/master/setup.sh
-  chmod +x setup.sh
-  cp -r setup.sh /mnt
+  cp -rf setup.sh /mnt
   arch-chroot /mnt ./setup.sh
 }
 
