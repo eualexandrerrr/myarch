@@ -3,6 +3,9 @@
 USERNAME=mamutal91
 HOSTNAME=odin
 
+echo "#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*"
+echo "Starting system configuration..."
+
 ln -s /hostlvm /run/lvm
 
 echo "Config pacman"
