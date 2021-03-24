@@ -11,7 +11,7 @@ function recovery() {
 function format() {
 
   echo "Formatting /dev/sda2"
-  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2 || exit 1
+  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2 || { echo "Error encrypting disk"; exit }
   cryptsetup luksOpen /dev/sda2 lvm
 
   pvcreate /dev/mapper/lvm
