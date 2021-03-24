@@ -62,7 +62,7 @@ if [ "${1}" = "recovery" ];
 then
   recovery
 else
-  format
+  format > log.txt
 fi
 
 # reboot
