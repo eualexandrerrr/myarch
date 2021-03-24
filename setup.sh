@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-USERNAME=mamutal91
-HOSTNAME=odin
+USER=mamutal91
+HOST=odin
 
 echo "#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*"
 echo "Starting system configuration..."
@@ -19,7 +19,7 @@ sed -i "s/block/block encrypt lvm2/g" /etc/mkinitcpio.conf
 mkinitcpio -P
 
 echo "Config sudoers"
-sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
+sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USER ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 
 # systemd
 sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
@@ -36,10 +36,10 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Add my user"
-useradd -m -G wheel -s /bin/bash $USERNAME
-mkdir -p /home/$USERNAME
+useradd -m -G wheel -s /bin/bash $USER
+mkdir -p /home/$USER
 
-if [[ $USERNAME = "mamutal91" ]]; then
+if [[ $USER = "mamutal91" ]]; then
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
 fi
 
@@ -51,7 +51,7 @@ echo LANG=pt_BR.UTF-8 > /etc/locale.conf
 sudo ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 locale-gen
 
-echo $HOSTNAME > /etc/hostname
+echo $HOST > /etc/hostname
 
 modprobe zram
 
@@ -60,5 +60,5 @@ systemctl enable dhcpcd
 systemctl enable iwd
 
 # Set passwords
-passwd $USERNAME
+passwd $USER
 passwd root
