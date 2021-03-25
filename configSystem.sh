@@ -9,6 +9,7 @@ echo "Starting system configuration..."
 ln -s /hostlvm /run/lvm
 
 echo "Config pacman"
+reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 sed -i "s/#TotalDownload/TotalDownload/g" /etc/pacman.conf

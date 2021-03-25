@@ -36,7 +36,6 @@ function format() {
   echo "Getting better mirrors"
   pacman -Sy reflector --noconfirm
   reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
-  reflector -c Brazil --sort score --save /mnt/etc/pacman.d/mirrorlist
 
   readonly PACKAGES=(
     base base-devel bash-completion
