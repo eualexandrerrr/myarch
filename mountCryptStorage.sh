@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 echo "Formatting storage"
 cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda3
 cryptsetup luksOpen /dev/sda3 storage
