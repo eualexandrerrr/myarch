@@ -49,10 +49,10 @@ function format() {
 
   genfstab -U /mnt >> /mnt/etc/fstab
 
-  read -r -p "Configure system? [Y/n]" confirmSystem
-  if [[ ! "$confirmSystem" =~ ^(n|N) ]]; then
-    cp -rf setup.sh /mnt
-    arch-chroot /mnt ./setup.sh
+  read -r -p "Configure system? [Y/n]" configSystem
+  if [[ ! "$configSystem" =~ ^(n|N) ]]; then
+    cp -rf configSystem.sh /mnt
+    arch-chroot /mnt ./configSystem.sh
   fi
 }
 
@@ -66,8 +66,8 @@ fi
 # reboot
 if [[ "$?" == "0" ]]; then
   echo "Finished successfully."
-  read -r -p "Reboot now? [Y/n]" confirm
-  if [[ ! "$confirm" =~ ^(n|N) ]]; then
+  read -r -p "Reboot now? [Y/n]" reboot
+  if [[ ! "$reboot" =~ ^(n|N) ]]; then
     reboot
   fi
 fi
