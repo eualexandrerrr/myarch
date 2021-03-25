@@ -40,7 +40,7 @@ useradd -m -G wheel -s /bin/bash $USER
 mkdir -p /home/$USER
 
 if [[ $USER = "mamutal91" ]]; then
-  git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
+  git clone https://github.com/mamutal91/dotfiles /home/$USER/.dotfiles
 fi
 
 echo "Set locale, zone and keymap console"
@@ -57,6 +57,6 @@ systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
 
-# Set passwords
+echo "Set passwords"
 passwd $USER
 passwd root

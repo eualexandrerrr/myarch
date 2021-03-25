@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 function recovery() {
+  echo "Unlock and mount /dev/sda2"
   cryptsetup luksOpen /dev/sda2 lvm
   wait
   mount /dev/mapper/arch-root /mnt
@@ -9,9 +10,8 @@ function recovery() {
 }
 
 function format() {
-
   echo "Formatting /dev/sda2"
-  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2 || { echo "Error encrypting disk"; exit }
+  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
   cryptsetup luksOpen /dev/sda2 lvm
 
   pvcreate /dev/mapper/lvm
@@ -56,6 +56,7 @@ function format() {
   fi
 }
 
+# What to do?
 if [ "${1}" = "recovery" ];
 then
   recovery
@@ -63,11 +64,11 @@ else
   format
 fi
 
-# reboot
+# Reboot
 if [[ "$?" == "0" ]]; then
   echo "Finished successfully."
-  read -r -p "Reboot now? [Y/n]" reboot
-  if [[ ! "$reboot" =~ ^(n|N) ]]; then
+  read -r -p "Reboot now? [Y/n]" confirmReboot
+  if [[ ! "$confirmReboot" =~ ^(n|N) ]]; then
     reboot
   fi
 fi
