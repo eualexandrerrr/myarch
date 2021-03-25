@@ -45,7 +45,7 @@ function format() {
     lvm2
     mkinitcpio
     pacman-contrib
-    iwd networkmanager dhcpcd sudo efibootmgr grub nano git reflector
+    iwd networkmanager dhcpcd sudo grub nano git reflector
   )
 
   for i in "${PACKAGES[@]}"; do

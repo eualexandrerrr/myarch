@@ -25,8 +25,18 @@ sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USER ALL=(ALL) NOPAS
 sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
 sed -i "s/#NAutoVTs=6/NAutoVTs=6/g" /etc/systemd/logind.conf
 
+
 echo "Config grub"
 UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
+
+bootctl install
+
+echo "title Arch Linux
+linux /vmlinuz-linux
+initrd /initramfs-linux.img
+options cryptdevice=UUID=\"$UUID\":cryptroot:allow-discards root=/dev/mapper/arch-root rw" > /boot/loader/entries/arch.conf
+echo "default arch.conf" >> /boot/loader/loader.conf
+
 sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor acpi_osi=Linux mitigations=off"/g' /etc/default/grub
 sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='$UUID':lvm"/g' /etc/default/grub
 sed -i "s/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g" /etc/default/grub
