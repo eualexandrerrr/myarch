@@ -35,7 +35,7 @@ function format() {
   mount --bind /run/lvm /mnt/hostlvm
 
   echo "Getting better mirrors"
-  pacman -Sy reflector
+  pacman -Sy reflector --noconfirm
   reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
   reflector -c Brazil --sort score --save /mnt/etc/pacman.d/mirrorlist
 
