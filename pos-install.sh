@@ -20,7 +20,7 @@ sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
 sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 100/g" /etc/pacman.conf
+sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
 
 # Setup locate and time
 echo "KEYMAP=br-abnt2" > /etc/vconsole.conf

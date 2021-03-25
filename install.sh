@@ -163,7 +163,7 @@ else
   sed -i "s/#Color/Color/g" /etc/pacman.conf
   sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 100/g" /etc/pacman.conf
+  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
 
   # Install base system and some basic tools
   pacstrap /mnt --noconfirm \
