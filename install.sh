@@ -3,9 +3,8 @@
 function recovery() {
   echo "Unlock and mount /dev/sda2"
   cryptsetup luksOpen /dev/sda2 lvm
-  wait
   mount /dev/mapper/arch-root /mnt
-  wait
+  mount /dev/sda1 /mnt/boot
   arch-chroot /mnt
 }
 
