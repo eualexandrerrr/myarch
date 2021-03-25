@@ -34,13 +34,18 @@ function format() {
 
   mount --bind /run/lvm /mnt/hostlvm
 
+  echo "Getting better mirrors"
+  pacman -Sy reflector
+  reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
+  reflector -c Brazil --sort score --save /mnt/etc/pacman.d/mirrorlist
+
   readonly PACKAGES=(
     base base-devel bash-completion
     linux linux-headers linux-firmware
     lvm2
     mkinitcpio
     pacman-contrib
-    iwd networkmanager dhcpcd sudo efibootmgr grub nano git
+    iwd networkmanager dhcpcd sudo efibootmgr grub nano git reflector
   )
 
   for i in "${PACKAGES[@]}"; do
