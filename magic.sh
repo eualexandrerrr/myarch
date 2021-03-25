@@ -34,13 +34,6 @@ function format() {
 
   mount --bind /run/lvm /mnt/hostlvm
 
-  echo "Config zRam"
-  modprobe zram
-  echo lz4 > /mnt/sys/block/zram0/comp_algorithm
-  echo 32G > /mnt/sys/block/zram0/disksize
-  mkswap --label zram0 /mnt/dev/zram0
-  swapon --priority 100 /mnt/dev/zram0
-
   readonly PACKAGES=(
     base base-devel bash-completion
     linux linux-headers linux-firmware

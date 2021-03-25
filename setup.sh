@@ -53,8 +53,6 @@ locale-gen
 
 echo $HOST > /etc/hostname
 
-modprobe zram
-
 systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
