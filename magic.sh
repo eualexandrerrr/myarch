@@ -18,16 +18,19 @@ function format() {
   vgcreate arch /dev/mapper/lvm
 
   lvcreate -L 25G arch -n root
+  lvcreate -L 8G arch -n swap
   lvcreate -l 100%FREE arch -n home
 
   mkfs.fat -F32 /dev/sda1
   mkfs.ext4 /dev/mapper/arch-root
+  mkswap /dev/mapper/arch-swap
   mkfs.ext4 /dev/mapper/arch-home
 
   mount /dev/mapper/arch-root /mnt
   mkdir -p /mnt/{home,boot,hostlvm}
   mount /dev/mapper/arch-home /mnt/home
   mount /dev/sda1 /mnt/boot
+  sudo swapon -va
 
   mount --bind /run/lvm /mnt/hostlvm
 
