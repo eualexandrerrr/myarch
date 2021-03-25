@@ -49,16 +49,18 @@ function format() {
 
   genfstab -U /mnt >> /mnt/etc/fstab
 
-  # setup new system
-  cp -rf setup.sh /mnt
-  arch-chroot /mnt ./setup.sh
+  read -r -p "Configure system? [Y/n]" confirmSystem
+  if [[ ! "$confirmSystem" =~ ^(n|N) ]]; then
+    cp -rf setup.sh /mnt
+    arch-chroot /mnt ./setup.sh
+  fi
 }
 
 if [ "${1}" = "recovery" ];
 then
   recovery
 else
-  format > log.txt
+  format
 fi
 
 # reboot
