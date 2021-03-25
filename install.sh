@@ -54,11 +54,9 @@ function format() {
 
   genfstab -U /mnt >> /mnt/etc/fstab
 
-  read -r -p "Configure system? [Y/n]" configSystem
-  if [[ ! "$configSystem" =~ ^(n|N) ]]; then
-    cp -rf configSystem.sh /mnt
-    arch-chroot /mnt ./configSystem.sh
-  fi
+  echo "Starting arch-chroot..."
+  cp -rf configSystem.sh /mnt
+  arch-chroot /mnt ./configSystem.sh
 }
 
 # What to do?
