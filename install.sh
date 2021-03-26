@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-function recovery() {
+if [[ ${1} = "recovery" ]]; then
   echo "Unlock and mount /dev/sda2"
   cryptsetup luksOpen /dev/sda2 lvm
   mount /dev/mapper/arch-root /mnt
   mount /dev/sda1 /mnt/boot
   arch-chroot /mnt
-}
-
-function format() {
+else
   echo "Formatting /dev/sda2"
   cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda2
   cryptsetup luksOpen /dev/sda2 lvm
@@ -55,14 +53,6 @@ function format() {
   echo "Starting arch-chroot..."
   cp -rf configSystem.sh /mnt
   arch-chroot /mnt ./configSystem.sh
-}
-
-# What to do?
-if [ "${1}" = "recovery" ];
-then
-  recovery
-else
-  format
 fi
 
 # Reboot
