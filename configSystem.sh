@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 
 USER=mamutal91
 HOST=odin
@@ -25,7 +25,6 @@ sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USER ALL=(ALL) NOPAS
 # systemd
 sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
 sed -i "s/#NAutoVTs=6/NAutoVTs=6/g" /etc/systemd/logind.conf
-
 
 echo "Config grub"
 UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
