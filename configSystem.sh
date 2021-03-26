@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+
 
 USER=mamutal91
 HOST=odin
@@ -31,6 +31,8 @@ echo "Config grub"
 UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
 
 bootctl install
+
+mkdir -p /boot/loader/entries
 
 echo "title Arch Linux
 linux /vmlinuz-linux
