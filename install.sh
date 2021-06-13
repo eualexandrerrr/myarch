@@ -41,7 +41,7 @@ else
     lvm2
     mkinitcpio
     pacman-contrib
-    iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector
+    iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector wget
   )
 
   for i in "${PACKAGES[@]}"; do
