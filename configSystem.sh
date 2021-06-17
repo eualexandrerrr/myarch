@@ -9,7 +9,9 @@ echo "Config pacman"
 reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
-sed -i "s/#TotalDownload/TotalDownload/g" /etc/pacman.conf
+sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
+sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
+sed -i "s/#ParallelDownloads/ParallelDownloads/g" /etc/pacman.conf
 
 echo "Config mkinitpcio"
 sed -i "s/block/block encrypt lvm2/g" /etc/mkinitcpio.conf
