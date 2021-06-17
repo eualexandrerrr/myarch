@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ ${1} = "recovery" ]]; then
+if [[ ${1} == "recovery" ]]; then
   echo "Unlock and mount /dev/sda2"
   cryptsetup luksOpen /dev/sda2 lvm
   mount /dev/mapper/arch-root /mnt
@@ -56,10 +56,10 @@ else
 fi
 
 # Reboot
-if [[ "$?" == "0" ]]; then
+if [[ $? == "0"   ]]; then
   echo "Finished successfully."
   read -r -p "Reboot now? [Y/n]" confirmReboot
-  if [[ ! "$confirmReboot" =~ ^(n|N) ]]; then
+  if [[ ! $confirmReboot =~ ^(n|N)   ]]; then
     reboot
   fi
 fi

@@ -48,7 +48,7 @@ echo "Add my user"
 useradd -m -G wheel -s /bin/bash $USER
 mkdir -p /home/$USER
 
-if [[ $USER = "mamutal91" ]]; then
+if [[ $USER == "mamutal91" ]]; then
   git clone https://github.com/mamutal91/dotfiles /home/$USER/.dotfiles
 fi
 
