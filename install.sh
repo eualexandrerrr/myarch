@@ -5,7 +5,7 @@ sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
 sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-sed -i "s/#ParallelDownloads/ParallelDownloads/g" /etc/pacman.conf
+sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
 
 if [[ ${1} == "recovery" ]]; then
   echo "Unlock and mount /dev/sda2"
