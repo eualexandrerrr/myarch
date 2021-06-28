@@ -45,8 +45,7 @@ else
   readonly PACKAGES=(
     base base-devel bash-completion
     linux linux-headers linux-firmware
-    lvm2
-    mkinitcpio
+    lvm2 mkinitcpio
     pacman-contrib
     iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector wget openssh
   )
