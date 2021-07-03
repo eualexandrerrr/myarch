@@ -49,7 +49,7 @@ else
   pacman -Sy reflector --noconfirm
   reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
 
-  readonly PACKAGES=(
+  readonly packages=(
     base base-devel bash-completion
     linux linux-headers linux-firmware
     lvm2 mkinitcpio
@@ -57,7 +57,7 @@ else
     iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector wget openssh
   )
 
-  for i in "${PACKAGES[@]}"; do
+  for i in "${packages[@]}"; do
     pacstrap /mnt ${i} --noconfirm
   done
 
