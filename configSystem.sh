@@ -20,7 +20,7 @@ sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
 
 echo "Config mkinitpcio"
 sed -i "s/block/block encrypt lvm2/g" /etc/mkinitcpio.conf
-
+sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
 mkinitcpio -P
 
 echo "Config sudoers"
@@ -43,7 +43,7 @@ initrd /initramfs-linux.img
 options cryptdevice=UUID=\"$UUID\":cryptroot:allow-discards root=/dev/mapper/arch-root rw" > /boot/loader/entries/arch.conf
 echo "default arch.conf" >> /boot/loader/loader.conf
 
-sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash"/g' /etc/default/grub
+sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor nvidia-drm.modeset=1"/g' /etc/default/grub
 sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='$UUID':lvm"/g' /etc/default/grub
 sed -i "s/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g" /etc/default/grub
 sed -i "s/GRUB_TIMEOUT=5/GRUB_TIMEOUT=0/g" /etc/default/grub
