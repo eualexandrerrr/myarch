@@ -49,17 +49,13 @@ else
   pacman -Sy reflector --noconfirm
   reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
 
-  readonly packages=(
-    base base-devel bash-completion
-    linux linux-headers linux-firmware
-    lvm2 mkinitcpio
-    pacman-contrib
-    iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector wget openssh
-  )
-
-  for i in "${packages[@]}"; do
-    pacstrap /mnt ${i} --noconfirm
-  done
+  pacstrap /mnt --noconfirm \
+    base base-devel bash-completion \
+    linux linux-headers linux-firmware \
+    lvm2 mkinitcpio \
+    pacman-contrib \
+    iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector wget openssh \
+    nvidia nvidia-utils nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia
 
   genfstab -U /mnt >> /mnt/etc/fstab
 
