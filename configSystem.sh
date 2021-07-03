@@ -57,6 +57,8 @@ mkdir -p /home/$username
 
 if [[ $username == "mamutal91" ]]; then
   git clone https://github.com/mamutal91/dotfiles /home/$username/.dotfiles
+  sed -i "s/https/ssh/g" /home/$username/.dotfiles/.git/config
+  sed -i "s/github/git@github/g" /home/$username/.dotfiles/.git/config
 fi
 
 echo "Set locale, zone and keymap console"
