@@ -26,7 +26,7 @@ sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind
 sed -i "s/#NAutoVTs=6/NAutoVTs=6/g" /etc/systemd/logind.conf
 
 echo "Config grub"
-UUID=$(blkid /dev/sda2 | awk -F '"' '{print $2}')
+UUID=$(blkid /dev/nvme0n1p2 | awk -F '"' '{print $2}')
 
 bootctl install
 
@@ -65,6 +65,18 @@ hwclock --systohc
 
 echo $HOST > /etc/hostname
 
+# Mount HDD storage
+UUID=$(blkid /dev/sda1 | awk -F '"' '{print $2}')
+crypttab="storage UUID=$UUID /root/keyfile luks"
+echo "" >> /etc/crypttab
+echo $crypttab >> /etc/crypttab
+echo "" >> /etc/fstab
+echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2"
+dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
+chmod 0400 /root/keyfile
+cryptsetup -v luksAddKey /dev/sda1 /root/keyfile
+
+# Services
 systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
