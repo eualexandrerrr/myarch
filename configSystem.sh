@@ -68,12 +68,10 @@ hwclock --systohc
 echo $HOST > /etc/hostname
 
 # Mount HDD storage
-UUID=$(blkid /dev/sda1 | awk -F '"' '{print $2}')
-crypttab="storage UUID=$UUID /root/keyfile luks"
 echo "" >> /etc/crypttab
-echo $crypttab >> /etc/crypttab
+echo "storage UUID=$(blkid /dev/sda1 | awk -F '"' '{print $2}') /root/keyfile luks" >> /etc/crypttab
 echo "" >> /etc/fstab
-echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2"
+echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2" /etc/fstab
 dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
 chmod 0400 /root/keyfile
 cryptsetup -v luksAddKey /dev/sda1 /root/keyfile
