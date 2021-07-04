@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-clear
-
-read -p "You user? [ enter = mamutal91 ]: " username
-read -p "You hostname? [ enter = odin ]: " hostname
-[[ -z $username ]] && username=mamutal91 || username=$username
-[[ -z $hostname ]] && hostname=odin || hostname=$hostname
-echo -e "\nUSER: $username\nHOST: $hostname\n"
+username=${1}
+hostname=${2}
+password=${3}
 
 ln -s /hostlvm /run/lvm
 
@@ -40,11 +36,11 @@ mkdir -p /boot/loader/entries
 echo "title Arch Linux
 linux /vmlinuz-linux
 initrd /initramfs-linux.img
-options cryptdevice=UUID=\"$UUID\":cryptroot:allow-discards root=/dev/mapper/arch-root rw" > /boot/loader/entries/arch.conf
+options cryptdevice=UUID=\"${UUID}\":cryptroot:allow-discards root=/dev/mapper/arch-root rw" > /boot/loader/entries/arch.conf
 echo "default arch.conf" >> /boot/loader/loader.conf
 
 sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor nvidia-drm.modeset=1"/g' /etc/default/grub
-sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='$UUID':lvm"/g' /etc/default/grub
+sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='${UUID}':lvm"/g' /etc/default/grub
 sed -i "s/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g" /etc/default/grub
 sed -i "s/GRUB_TIMEOUT=5/GRUB_TIMEOUT=0/g" /etc/default/grub
 
@@ -52,13 +48,13 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Add my user"
-useradd -m -G wheel -s /bin/bash $username
-mkdir -p /home/$username
+useradd -m -G wheel -s /bin/bash ${username}
+mkdir -p /home/${username}
 
-if [[ $username == "mamutal91" ]]; then
-  git clone https://github.com/mamutal91/dotfiles /home/$username/.dotfiles
-  sed -i "s/https/ssh/g" /home/$username/.dotfiles/.git/config
-  sed -i "s/github/git@github/g" /home/$username/.dotfiles/.git/config
+if [[ ${username} == "mamutal91" ]]; then
+  git clone https://github.com/mamutal91/dotfiles /home/${username}/.dotfiles
+  sed -i "s/https/ssh/g" /home/${username}/.dotfiles/.git/config
+  sed -i "s/github/git@github/g" /home/${username}/.dotfiles/.git/config
 fi
 
 echo "Set locale, zone and keymap console"
@@ -92,7 +88,5 @@ systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
 
-clear
-echo "Set passwords"
-passwd $username
-passwd root
+echo $password | passwd $username
+echo $password | passwd root
