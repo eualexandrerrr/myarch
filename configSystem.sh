@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-
-username=${1}
-hostname=${2}
-password=${3}
-
 ln -s /hostlvm /run/lvm
 
 echo "Config pacman"
@@ -20,7 +15,7 @@ sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /e
 mkinitcpio -P
 
 echo "Config sudoers"
-sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$username ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
+sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$user ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 
 # systemd
 sed -i "s/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g" /etc/systemd/logind.conf
@@ -48,13 +43,13 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Add my user"
-useradd -m -G wheel -s /bin/bash ${username}
-mkdir -p /home/${username}
+useradd -m -G wheel -s /bin/bash ${user}
+mkdir -p /home/${user}
 
-if [[ ${username} == "mamutal91" ]]; then
-  git clone https://github.com/mamutal91/dotfiles /home/${username}/.dotfiles
-  sed -i "s/https/ssh/g" /home/${username}/.dotfiles/.git/config
-  sed -i "s/github/git@github/g" /home/${username}/.dotfiles/.git/config
+if [[ ${user} == "mamutal91" ]]; then
+  git clone https://github.com/mamutal91/dotfiles /home/${user}/.dotfiles
+  sed -i "s/https/ssh/g" /home/${user}/.dotfiles/.git/config
+  sed -i "s/github/git@github/g" /home/${user}/.dotfiles/.git/config
 fi
 
 echo "Set locale, zone and keymap console"
@@ -68,10 +63,10 @@ locale-gen
 sudo ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
 
-echo $hostname > /etc/hostname
+echo $host > /etc/hostname
 
 # Mount HDD storage
-if [[ $username == mamutal91 ]]; then
+if [[ $user == mamutal91 ]]; then
   mkdir -p /mnt/media/storage
   echo "" >> /etc/crypttab
   echo "storage UUID=$(blkid /dev/sda1 | awk -F '"' '{print $2}') /root/keyfile luks" >> /etc/crypttab
@@ -80,6 +75,8 @@ if [[ $username == mamutal91 ]]; then
   echo "/dev/mapper/storage  /media/storage     ext4    defaults        0       2" >> /etc/fstab
   dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
   chmod 0400 /root/keyfile
+  clear
+  echo Type passwd hd storage
   cryptsetup -v luksAddKey /dev/sda1 /root/keyfile
 fi
 
@@ -88,5 +85,5 @@ systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
 
-echo $password | passwd $username
-echo $password | passwd root
+passwd $user
+passwd root

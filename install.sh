@@ -7,7 +7,23 @@ read -r -p "You hostname? " hostname
 [[ -z $hostname ]] && hostname=odin || hostname=$hostname
 echo -e "$hostname\n"
 read -r -p "You password default? " password
-echo -e "$password\n"
+echo -e "$password"
+[[ -z $password ]] && echo No password set, exiting... && exit
+
+fileConfigSystem=configSystem.sh
+sed -i "2i user=$(echo ${username})" $fileConfigSystem
+sed -i "2i host=$(echo ${hostname})" $fileConfigSystem
+sed -i "2i pass=$(echo ${password})" $fileConfigSystem
+
+chmod +x configSystem.sh
+
+if [[ $username == mamutal91 ]]; then
+  git config --global user.name "Alexandre Rangel"
+  git config --global user.email "mamutal91@gmail.com"
+  sleep 10
+fi
+
+umount -R /mnt &> /dev/null
 
 # Config pacman
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -18,7 +34,7 @@ sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
 
 if [[ ${1} == recovery ]]; then
   echo "Unlock and mount /dev/nvme0n1p2"
-  echo $password | cryptsetup luksOpen /dev/nvme0n1p2 lvm
+  cryptsetup luksOpen /dev/nvme0n1p2 lvm
   sleep 30
   echo "Mounting partitions... (30 seconds)"
   mount /dev/mapper/arch-root /mnt
@@ -26,14 +42,14 @@ if [[ ${1} == recovery ]]; then
   arch-chroot /mnt
 else
   echo "Formatting /dev/nvme0n1p2"
-  echo YES | cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/nvme0n1p2
-  echo $password | cryptsetup luksOpen /dev/nvme0n1p2 lvm
+  cryptsetup -q luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/nvme0n1p2
+  cryptsetup luksOpen /dev/nvme0n1p2 lvm
 
   if [[ ${1} == storage ]]; then
-    echo YES | cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda1
-    echo $password | cryptsetup luksOpen /dev/sda1 storage
+    cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda1
+    cryptsetup luksOpen /dev/sda1 storage
     mkfs.ext4 /dev/mapper/storage
-    echo $password | cryptsetup luksOpen /dev/sda1 storage
+    cryptsetup luksOpen /dev/sda1 storage
   fi
 
   pvcreate /dev/mapper/lvm
@@ -72,14 +88,8 @@ else
 
   echo "Starting arch-chroot..."
   cp -rf configSystem.sh /mnt
-  arch-chroot /mnt ./configSystem.sh ${username} ${hostname} ${password}
+  clear
+  arch-chroot /mnt ./configSystem.sh
 fi
 
-# Reboot
-if [[ $? == "0" ]]; then
-  echo -e "\nFinished successfully."
-  read -r -p "Reboot now? [Y/n]" confirmReboot
-  if [[ ! $confirmReboot =~ ^(n|N)   ]]; then
-    reboot
-  fi
-fi
+echo "END!"
