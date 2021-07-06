@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-chmod +x configSystem.sh
-
-if [[ $username == mamutal91 ]]; then
+if [[ $1 == git ]]; then
   git config --global user.name "Alexandre Rangel"
   git config --global user.email "mamutal91@gmail.com"
+  export EDITOR=nano
+  exit
 fi
-
-umount -R /mnt &> /dev/null
 
 # Config pacman
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -24,12 +22,14 @@ if [[ ${1} == recovery ]]; then
   mount /dev/mapper/arch-root /mnt
   mount /dev/nvme0n1p1 /mnt/boot
   arch-chroot /mnt
-else
+fi
+
+if [[ ${1} == format ]]; then
   echo "Formatting /dev/nvme0n1p2"
   cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/nvme0n1p2
   cryptsetup luksOpen /dev/nvme0n1p2 lvm
 
-  if [[ ${1} == storage ]]; then
+  if [[ ${2} == storage ]]; then
     cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda1
     cryptsetup luksOpen /dev/sda1 storage
     mkfs.ext4 /dev/mapper/storage
@@ -74,6 +74,7 @@ else
   cp -rf configSystem.sh /mnt
   clear
   arch-chroot /mnt ./configSystem.sh
+  umount -R /mnt
 fi
 
 echo "END!"

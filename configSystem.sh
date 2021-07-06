@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
+
 ln -s /hostlvm /run/lvm
 
 host=odin
 hostname=odin
 user=mamutal91
 username=mamutal91
+
 echo "Config pacman"
 reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -89,5 +91,6 @@ systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
 
+clear
 passwd $user
 passwd root
