@@ -1,26 +1,10 @@
 #!/usr/bin/env bash
 
-read -r -p "You username? " username
-[[ -z $username ]] && username=mamutal91 || username=$username
-echo -e "$username\n"
-read -r -p "You hostname? " hostname
-[[ -z $hostname ]] && hostname=odin || hostname=$hostname
-echo -e "$hostname\n"
-read -r -p "You password default? " password
-echo -e "$password"
-[[ -z $password ]] && echo "No password set, exiting..." && exit
-
-fileConfigSystem=configSystem.sh
-sed -i "2i user=$(echo ${username})" $fileConfigSystem
-sed -i "2i host=$(echo ${hostname})" $fileConfigSystem
-sed -i "2i pass=$(echo ${password})" $fileConfigSystem
-
 chmod +x configSystem.sh
 
 if [[ $username == mamutal91 ]]; then
   git config --global user.name "Alexandre Rangel"
   git config --global user.email "mamutal91@gmail.com"
-  sleep 10
 fi
 
 umount -R /mnt &> /dev/null
@@ -42,7 +26,7 @@ if [[ ${1} == recovery ]]; then
   arch-chroot /mnt
 else
   echo "Formatting /dev/nvme0n1p2"
-  cryptsetup -q luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/nvme0n1p2
+  cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/nvme0n1p2
   cryptsetup luksOpen /dev/nvme0n1p2 lvm
 
   if [[ ${1} == storage ]]; then
