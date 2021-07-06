@@ -7,7 +7,8 @@
 
 - Run
 
-`cd myarch && ./install.sh`
+`cd myarch`
+`./install.sh`
 
 ### Requirements
 ---
