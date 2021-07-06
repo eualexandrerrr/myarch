@@ -1,95 +1,91 @@
 #!/usr/bin/env bash
 
-read -r -p "You username? " username
-[[ -z $username ]] && username=mamutal91 || username=$username
-echo -e "$username\n"
-read -r -p "You hostname? " hostname
-[[ -z $hostname ]] && hostname=odin || hostname=$hostname
-echo -e "$hostname\n"
-read -r -p "You password default? " password
-echo -e "$password"
-[[ -z $password ]] && echo "No password set, exiting..." && exit
+NVME=/dev/nvme0n1
+NVME1=/dev/nvme0n1p1
+NVME2=/dev/nvme0n1p2
+HDD=/dev/sda
 
-fileConfigSystem=configSystem.sh
-sed -i "2i user=$(echo ${username})" $fileConfigSystem
-sed -i "2i host=$(echo ${hostname})" $fileConfigSystem
-sed -i "2i pass=$(echo ${password})" $fileConfigSystem
-
-chmod +x configSystem.sh
-
-if [[ $username == mamutal91 ]]; then
-  git config --global user.name "Alexandre Rangel"
-  git config --global user.email "mamutal91@gmail.com"
-  sleep 10
-fi
-
-umount -R /mnt &> /dev/null
-
-# Config pacman
-sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-sed -i "s/#Color/Color/g" /etc/pacman.conf
-sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
-sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
+HOSTNAME=odin
+USERNAME=mamutal91
 
 if [[ ${1} == recovery ]]; then
-  echo "Unlock and mount /dev/nvme0n1p2"
-  cryptsetup luksOpen /dev/nvme0n1p2 lvm
-  sleep 30
-  echo "Mounting partitions... (30 seconds)"
-  mount /dev/mapper/arch-root /mnt
-  mount /dev/nvme0n1p1 /mnt/boot
-  arch-chroot /mnt
-else
-  echo "Formatting /dev/nvme0n1p2"
-  cryptsetup -q luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/nvme0n1p2
-  cryptsetup luksOpen /dev/nvme0n1p2 lvm
-
-  if [[ ${1} == storage ]]; then
-    cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --use-random -i 100 /dev/sda1
-    cryptsetup luksOpen /dev/sda1 storage
-    mkfs.ext4 /dev/mapper/storage
-    cryptsetup luksOpen /dev/sda1 storage
-  fi
-
-  pvcreate /dev/mapper/lvm
-  vgcreate arch /dev/mapper/lvm
-
-  lvcreate -L 25G arch -n root
-  lvcreate -L 8G arch -n swap
-  lvcreate -l 100%FREE arch -n home
-
-  mkfs.fat -F32 /dev/nvme0n1p1
-  mkfs.ext4 /dev/mapper/arch-root
-  mkswap /dev/mapper/arch-swap
-  mkfs.ext4 /dev/mapper/arch-home
-
-  mount /dev/mapper/arch-root /mnt
-  mkdir -p /mnt/{home,boot,hostlvm}
-  mount /dev/mapper/arch-home /mnt/home
-  mount /dev/nvme0n1p1 /mnt/boot
-  sudo swapon -va
-
-  mount --bind /run/lvm /mnt/hostlvm
-
-  echo "Getting better mirrors"
-  pacman -Sy reflector --noconfirm
-  reflector -c Brazil --sort score --save /etc/pacman.d/mirrorlist
-
-  pacstrap /mnt --noconfirm \
-    base base-devel bash-completion \
-    linux linux-headers linux-firmware \
-    lvm2 mkinitcpio \
-    pacman-contrib \
-    iwd networkmanager dhcpcd sudo grub efibootmgr nano git reflector wget openssh \
-    nvidia nvidia-utils nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia
-
-  genfstab -U /mnt >> /mnt/etc/fstab
-
-  echo "Starting arch-chroot..."
-  cp -rf configSystem.sh /mnt
-  clear
-  arch-chroot /mnt ./configSystem.sh
+  cryptsetup open /dev/disk/by-partlabel/cryptsystem system
+  cryptsetup open --type plain --key-file /dev/urandom /dev/disk/by-partlabel/cryptswap swap
+  mkswap -L swap /dev/mapper/swap
+  swapon -L swap
+  o=defaults,x-mount.mkdir
+  o_btrfs=$o,compress=lzo,ssd,noatime
+  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
+  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
+  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
+  mount $NVME1 /mnt/boot
+  sleep 5
+  arch-chroot
 fi
 
-echo "END!"
+if [[ -z ${1} ]]; then
+  # Format the drive
+  sgdisk --clear \
+    --new=1:0:+550MiB --typecode=1:ef00 --change-name=1:EFI \
+    --new=2:0:+4GiB   --typecode=2:8200 --change-name=2:cryptswap \
+    --new=3:0:0       --typecode=3:8300 --change-name=3:cryptsystem \
+    $NVME
+
+  # Encrypt the system partition
+  cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 /dev/disk/by-partlabel/cryptsystem
+  cryptsetup open /dev/disk/by-partlabel/cryptsystem system
+
+  # Enable encrypted swap partition
+  cryptsetup open --type plain --key-file /dev/urandom /dev/disk/by-partlabel/cryptswap swap
+  mkswap -L swap /dev/mapper/swap
+  swapon -L swap
+
+  # Format the partitions
+  mkfs.fat -F32 -n EFI /dev/disk/by-partlabel/EFI
+  mkfs.btrfs --force --label system /dev/mapper/system
+
+  # Create btrfs subvolumes
+  mount -t btrfs LABEL=system /mnt
+  btrfs subvolume create /mnt/root
+  btrfs subvolume create /mnt/home
+  btrfs subvolume create /mnt/snapshots
+
+  # Mount partitions
+  o=defaults,x-mount.mkdir
+  o_btrfs=$o,compress=lzo,ssd,noatime
+  umount -R /mnt
+  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
+  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
+  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
+  mkdir /mnt/boot
+  mount $NVME1 /mnt/boot
+
+  # Discover the best mirros to download packages
+  reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+
+  # Install base system and some basic tools
+  pacstrap /mnt --noconfirm \
+    base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio pacman-contrib \
+    btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs\
+    iwd networkmanager dhcpcd sudo grub nano git reflector wget openssh \
+    zsh git curl wget \
+    nvidia nvidia-utils nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia
+
+  # Generate fstab entries
+  genfstab -L -p /mnt >> /mnt/etc/fstab
+  sed -i "s+LABEL=swap+/dev/mapper/cryptswap+" /mnt/etc/fstab
+
+  # Add cryptab entry
+  echo "cryptswap /dev/disk/by-partlabel/cryptswap /dev/urandom swap,offset=2048,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab
+
+  # Arch Chroot
+  arch-chroot /mnt useradd -m -G wheel -s /bin/bash $USERNAME
+  arch-chroot /mnt sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
+  arch-chroot /mnt mkdir -p /home/$USERNAME
+  arch-chroot /mnt echo $HOSTNAME > /etc/hostname
+  arch-chroot /mnt passwd root
+  arch-chroot /mnt passwd $USERNAME
+
+  chmod +x configSystem.sh && cp -rf configSystem.sh /mnt && clear
+  arch-chroot /mnt ./configSystem.sh
+fi
