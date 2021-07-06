@@ -1,17 +1,29 @@
 #!/usr/bin/env bash
 
-if [[ ${1} == qemu ]]; then
-  DISK=/dev/sda # nvme
-  DISK1=/dev/sda1 # EFI (boot)
-  DISK2=/dev/sda2 # cryptswap
-  DISK3=/dev/sda3 # cryptsystem
-  HDD=/dev/sda # storage
-else
+blue=$(tput setaf 4) && black=$(tput setaf 0) && red=$(tput setaf 1) && green=$(tput setaf 2) && yellow=$(tput setaf 3) && blue=$(tput setaf 4) && magenta=$(tput setaf 5) && cyan=$(tput setaf 6) && white=$(tput setaf 7) && end=$(tput sgr0)
+
+read -r -p "${blue}You username? " USERNAME
+[[ -z $USERNAME ]] && USERNAME=mamutal91 || USERNAME=$USERNAME
+echo -e "$USERNAME\n"
+read -r -p "${green}You hostname? " HOSTNAME
+[[ -z $HOSTNAME ]] && HOSTNAME=odin || HOSTNAME=$HOSTNAME
+echo -e "$HOSTNAME\n"
+read -r -p "${cyan}You password default? " PASSWORD
+echo -e "$PASSWORD"
+[[ -z $PASSWORD ]] && echo "${red}No password set, exiting...${end}" && exit
+
+if [[ $USERNAME == mamutal91 ]]; then
   DISK=/dev/nvme0n1 # nvme
   DISK1=/dev/nvme0n1p1 # EFI (boot)
   DISK2=/dev/nvme0n1p2 # cryptswap
   DISK3=/dev/nvme0n1p3 # cryptsystem
-  HDD=/dev/sda # storage
+  STORAGE=/dev/sda1 # storage
+else
+  DISK=/dev/sda # nvme
+  DISK1=/dev/sda1 # EFI (boot)
+  DISK2=/dev/sda2 # cryptswap
+  DISK3=/dev/sda3 # cryptsystem
+  STORAGE=/dev/sdb1 # storage
 fi
 
 HOSTNAME=odin
@@ -41,10 +53,10 @@ else
     $DISK
     if [[ $? -eq 0 ]]; then
       echo "sgdisk SUCCESS"
-    else
+  else
       echo "sgdisk FAILURE"
       exit 1
-    fi
+  fi
 
   # Encrypt the system partition
   cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $DISK3
@@ -55,6 +67,16 @@ else
     exit 1
   fi
   cryptsetup open $DISK3 system
+
+  if [[ ${1} == storage ]]; then
+    HAVE_STORAGE=true
+    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE
+    cryptsetup luksOpen /dev/sda1 storage
+    mkfs.btrfs --force --label storage /dev/mapper/storage
+    cryptsetup luksOpen /dev/sda1 storage
+  else
+    HAVE_STORAGE=false
+  fi
 
   # Enable encrypted swap partition
   cryptsetup open --type plain --key-file /dev/urandom $DISK2 swap
@@ -87,14 +109,13 @@ else
   sed -i "s/#Color/Color/g" /etc/pacman.conf
   sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
+  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 20/g" /etc/pacman.conf
 
   # Install base system and some basic tools
   pacstrap /mnt --noconfirm \
-    base base-devel bash-completion linux linux-headers linux-firmware mkinitcpio pacman-contrib \
+    base base-devel bash-completion linux-zen linux-zen-headers linux-firmware mkinitcpio pacman-contrib \
     btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
-    iwd networkmanager dhcpcd sudo grub nano git reflector wget openssh zsh git curl wget \
-    nvidia nvidia-utils nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia
+    iwd networkmanager dhcpcd sudo grub nano git reflector wget openssh zsh git curl wget
 
   # Generate fstab entries
   genfstab -L -p /mnt >> /mnt/etc/fstab
@@ -103,14 +124,19 @@ else
   # Add cryptab entry
   echo "cryptswap $DISK2 /dev/urandom swap,offset=2048,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab
 
-  # Arch Chroot
-  arch-chroot /mnt useradd -m -G wheel -s /bin/bash $USERNAME
-  arch-chroot /mnt sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
-  arch-chroot /mnt mkdir -p /home/$USERNAME
-  arch-chroot /mnt echo $HOSTNAME > /etc/hostname
-  arch-chroot /mnt passwd root
-  arch-chroot /mnt passwd $USERNAME
+  # Copy wifi connection to the system
+  mkdir -p /mnt/var/lib/iwd
+  chmod 700 /mnt/var/lib/iwd
+  cp -rf /var/lib/iwd/*.psk /mnt/var/lib/iwd
 
+  # Arch Chroot
+  sed -i "2i USERNAME=$USERNAME" pos-install.sh
+  sed -i "3i HOSTNAME=$HOSTNAME" pos-install.sh
+  sed -i "4i PASSWORD=$PASSWORD" pos-install.sh
+  sed -i "5i DISK2=$DISK2" pos-install.sh
+  sed -i "6i DISK3=$DISK3" pos-install.sh
+  sed -i "7i STORAGE=$STORAGE" pos-install.sh
+  sed -i "8i HAVE_STORAGE=$HAVE_STORAGE" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
