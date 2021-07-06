@@ -8,7 +8,7 @@ read -r -p "You hostname? " hostname
 echo -e "$hostname\n"
 read -r -p "You password default? " password
 echo -e "$password"
-[[ -z $password ]] && echo No password set, exiting... && exit
+[[ -z $password ]] && echo "No password set, exiting..." && exit
 
 fileConfigSystem=configSystem.sh
 sed -i "2i user=$(echo ${username})" $fileConfigSystem
