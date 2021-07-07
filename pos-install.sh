@@ -1,26 +1,35 @@
 #!/usr/bin/env bash
 
 # Get the device uuid
-DISK2_UUID=$(blkid /dev/disk/by-partlabel/$DISK2 | cut -d' ' -f2 | cut -d'=' -f2) && DISK2_UUID="${DRIVE_UUID%\"}" && DISK2_UUID="${DISK2_UUID#\"}"
-DISK3_UUID=$(blkid /dev/disk/by-partlabel/$DISK3 | cut -d' ' -f2 | cut -d'=' -f2) && DISK3_UUID="${DISK3_UUID%\"}" && DISK3_UUID="${DISK3_UUID#\"}"
+DISK2_UUID=$(blkid $DISK2 | awk -F '"' '{print $2}')
+DISK3_UUID=$(blkid $DISK3 | awk -F '"' '{print $2}')
 
-# Discove
-r the best mirros to download packages and update pacman configs
+# Set user and hostname
+useradd -m -G wheel -s /bin/bash $USERNAME
+mkdir -p /home/$USERNAME
+echo $HOSTNAME > /etc/hostname
+
+# Configure hosts
+echo "127.0.0.1	localhost
+::1		localhost
+127.0.1.1	myarch" | tee /etc/hosts
+
+# Discover the best mirros to download packages and update pacman configs
 reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i "s/#Color/Color/g" /etc/pacman.conf
 sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
 sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
+sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 50/g" /etc/pacman.conf
 
-# Setup locale
-echo -e "pt_BR.UTF-8 UTF-8\npt_BR ISO-8859-1" > /etc/locale.gen
-echo -e "en_US.UTF-8 UTF-8\nen_US ISO-8859-1" >> /etc/locale.gen
+# Setup locate and time
 echo "KEYMAP=br-abnt2" > /etc/vconsole.conf
+sed -i "s/#pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/g" /etc/locale.gen
+sed -i "s/#pt_BR ISO-8859-1/pt_BR ISO-8859-1/g" /etc/locale.gen
+sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen
+sed -i "s/#en_US ISO-8859-1/en_US ISO-8859-1/g" /etc/locale.gen
+echo "LANG=pt_BR.UTF-8" > /etc/locale.conf
 locale-gen
-localectl set-locale LANG=pt_BR.UTF-8
-
-# Enable clock sync and set the timezone
 ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
 
@@ -72,77 +81,49 @@ nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
 amd=$(lspci | grep -e VGA -e 3D | grep 'AMD' 2> /dev/null || echo '')
 intel=$(lspci | grep -e VGA -e 3D | grep 'Intel' 2> /dev/null || echo '')
 if [[ -n $nvidia   ]]; then
-  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia
+  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
   mkinitcpio -P
 fi
 
 if [[ -n $amd ]]; then
-  pacman -S --noconfirm xf86-video-amdgpu
+  pacman -S xf86-video-amdgpu --noconfirm
 fi
 
 if [[ -n $intel ]]; then
-  pacman -S --noconfirm xf86-video-intel
+  pacman -S xf86-video-intel --noconfirm
   gpasswd -a $username bumblebee
   systemctl enable bumblebeed
 fi
 
-clear
-
-# User configs
-useradd -m -G wheel -s /bin/bash $USERNAME
+# Sudo configs
 sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 
-mkdir -p /home/$USERNAME
-echo $HOSTNAME > /etc/hostname
-
 # Define passwords
-pacman -Sy expect --noconfirm
-expect -c "
-set newpass \"$PASSWORD\"
-spawn sudo passwd $USERNAME
-expect \".*ew password: \"
-send \"$newpass\n\"
-expect \".*etype new password: \"
-send \"$newpass\n\"
-spawn sudo passwd root
-expect \".*ew password: \"
-send \"$newpass\n\"
-expect \".*etype new password: \"
-send \"$newpass\n\"
-interact" &> /dev/null
+clear
+echo "Type password ($USERNAME / root)"
+passwd $USERNAME
+passwd root
 
 if [[ $HAVE_STORAGE == true ]]; then
-  STORAGE_UUID=$(blkid /dev/disk/by-partlabel/$STORAGE | cut -d' ' -f2 | cut -d'=' -f2) && STORAGE_UUID="${STORAGE_UUID%\"}" && STORAGE_UUID="${STORAGE_UUID#\"}"
-
-  mkdir -p /mnt/media/storage
+  STORAGE_UUID=$(blkid $STORAGE | awk -F '"' '{print $2}')
+  mkdir -p /mnt/storage
   echo -e "\nstorage UUID=$STORAGE_UUID /root/keyfile luks" >> /etc/crypttab
   echo -e "\n# Storage" >> /etc/fstab
-  echo "/dev/mapper/storage  /media/storage     btrfs    defaults        0       2" >> /etc/fstab
+  echo "/dev/mapper/storage  /mnt/storage     btrfs    defaults        0       2" >> /etc/fstab
   dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
   chmod 0400 /root/keyfile
-  expect -c "
-  set newpass \"$PASSWORD\"
-  spawn cryptsetup -v luksAddKey /dev/sda1 /root/keyfile
-  expect \".*nter any existing passphrase: \"
-  send \"$newpass\n\"
-  interact"
+  clear
+  cryptsetup -v luksAddKey $STORAGE /root/keyfile
 fi
 
 # My notebook
 if [[ $USERNAME == mamutal91 ]]; then
   wget https://raw.githubusercontent.com/mamutal91/dotfiles/master/setup/packages.sh && chmod +x packages.sh
+  source packages.sh
   for i in ${packages[@]}; do
     pacman -Sy ${i} --needed --noconfirm
-  done
-  for aur in $aur; do
-      echo "Installing $aur"
-      git clone https://aur.archlinux.org/$aur
-      cd $aur || exit
-      makepkg -si --skippgpcheck --noconfirm --needed
-      cd - || exit
-      rm -rf $aur
   done
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
   sed -i 's/https/ssh/g' /home/mamutal91/.dotfiles/.git/config

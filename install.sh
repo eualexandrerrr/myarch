@@ -4,13 +4,10 @@ blue=$(tput setaf 4) && black=$(tput setaf 0) && red=$(tput setaf 1) && green=$(
 
 read -r -p "${blue}You username? " USERNAME
 [[ -z $USERNAME ]] && USERNAME=mamutal91 || USERNAME=$USERNAME
-echo -e "$USERNAME\n"
-read -r -p "${green}You hostname? " HOSTNAME
+echo -e "${yellow}$USERNAME\n"
+read -r -p "${blue}You hostname? " HOSTNAME
 [[ -z $HOSTNAME ]] && HOSTNAME=odin || HOSTNAME=$HOSTNAME
-echo -e "$HOSTNAME\n"
-read -r -p "${cyan}You password default? " PASSWORD
-echo -e "$PASSWORD"
-[[ -z $PASSWORD ]] && echo "${red}No password set, exiting...${end}" && exit
+echo -e "${yellow}$HOSTNAME\n${white}"
 
 if [[ $USERNAME == mamutal91 ]]; then
   DISK=/dev/nvme0n1 # nvme
@@ -25,9 +22,6 @@ else
   DISK3=/dev/sda3 # cryptsystem
   STORAGE=/dev/sdb1 # storage
 fi
-
-HOSTNAME=odin
-USERNAME=mamutal91
 
 [[ $USERNAME == mamutal91 ]] && git config --global user.email "mamutal91@gmail.com" && git config --global user.name "Alexandre Rangel"
 
@@ -71,9 +65,9 @@ else
   if [[ ${1} == storage ]]; then
     HAVE_STORAGE=true
     cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE
-    cryptsetup luksOpen /dev/sda1 storage
+    cryptsetup luksOpen $STORAGE storage
     mkfs.btrfs --force --label storage /dev/mapper/storage
-    cryptsetup luksOpen /dev/sda1 storage
+    cryptsetup luksOpen $STORAGE storage
   else
     HAVE_STORAGE=false
   fi
@@ -109,7 +103,7 @@ else
   sed -i "s/#Color/Color/g" /etc/pacman.conf
   sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 20/g" /etc/pacman.conf
+  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 50/g" /etc/pacman.conf
 
   # Install base system and some basic tools
   pacstrap /mnt --noconfirm \
@@ -132,11 +126,10 @@ else
   # Arch Chroot
   sed -i "2i USERNAME=$USERNAME" pos-install.sh
   sed -i "3i HOSTNAME=$HOSTNAME" pos-install.sh
-  sed -i "4i PASSWORD=$PASSWORD" pos-install.sh
-  sed -i "5i DISK2=$DISK2" pos-install.sh
-  sed -i "6i DISK3=$DISK3" pos-install.sh
-  sed -i "7i STORAGE=$STORAGE" pos-install.sh
-  sed -i "8i HAVE_STORAGE=$HAVE_STORAGE" pos-install.sh
+  sed -i "4i DISK2=$DISK2" pos-install.sh
+  sed -i "5i DISK3=$DISK3" pos-install.sh
+  sed -i "6i STORAGE=$STORAGE" pos-install.sh
+  sed -i "7i HAVE_STORAGE=$HAVE_STORAGE" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
