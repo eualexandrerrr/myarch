@@ -78,22 +78,10 @@ systemctl enable iwd
 
 # graphics driver
 nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
-amd=$(lspci | grep -e VGA -e 3D | grep 'AMD' 2> /dev/null || echo '')
-intel=$(lspci | grep -e VGA -e 3D | grep 'Intel' 2> /dev/null || echo '')
-if [[ -n $nvidia   ]]; then
+if [[ -n $nvidia ]]; then
   pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
   mkinitcpio -P
-fi
-
-if [[ -n $amd ]]; then
-  pacman -S xf86-video-amdgpu --noconfirm
-fi
-
-if [[ -n $intel ]]; then
-  pacman -S xf86-video-intel --noconfirm
-  gpasswd -a $username bumblebee
-  systemctl enable bumblebeed
 fi
 
 # Sudo configs
