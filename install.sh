@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-blue=$(tput setaf 4) && black=$(tput setaf 0) && red=$(tput setaf 1) && green=$(tput setaf 2) && yellow=$(tput setaf 3) && blue=$(tput setaf 4) && magenta=$(tput setaf 5) && cyan=$(tput setaf 6) && white=$(tput setaf 7) && end=$(tput sgr0)
-
-read -r -p "${blue}You username? " USERNAME
+read -r -p "You username? " USERNAME
 [[ -z $USERNAME ]] && USERNAME=mamutal91 || USERNAME=$USERNAME
-echo -e "${yellow}$USERNAME\n"
-read -r -p "${blue}You hostname? " HOSTNAME
+echo -e "$USERNAME\n"
+read -r -p "You hostname? " HOSTNAME
 [[ -z $HOSTNAME ]] && HOSTNAME=odin || HOSTNAME=$HOSTNAME
-echo -e "${yellow}$HOSTNAME\n${white}"
+echo -e "$HOSTNAME\n"
+
+clear
 
 if [[ $USERNAME == mamutal91 ]]; then
   DISK=/dev/nvme0n1 # nvme
@@ -42,7 +42,7 @@ else
   # Format the drive
   sgdisk --clear \
     --new=1:0:+550MiB --typecode=1:ef00 --change-name=1:EFI \
-    --new=2:0:+16GiB   --typecode=2:8200 --change-name=2:cryptswap \
+    --new=2:0:+16GiB  --typecode=2:8200 --change-name=2:cryptswap \
     --new=3:0:0       --typecode=3:8300 --change-name=3:cryptsystem \
     $DISK
     if [[ $? -eq 0 ]]; then
@@ -134,7 +134,7 @@ else
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
     umount -R /mnt
-    echo "Finished SUCCESS\n"
+    echo -e "\n\nFinished SUCCESS\n"
     read -r -p "Reboot now? [Y/n]" confirmReboot
     if [[ ! $confirmReboot =~ ^(n|N) ]]; then
       reboot

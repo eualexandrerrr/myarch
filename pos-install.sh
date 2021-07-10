@@ -90,8 +90,9 @@ sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /e
 
 # Define passwords
 clear
-echo "Type password ($USERNAME / root)"
-passwd $USERNAME
+echo "Type password $USERNAME"
+passwd $USERNAME && clear
+echo "Type password root"
 passwd root
 
 if [[ $HAVE_STORAGE == true ]]; then
@@ -103,16 +104,12 @@ if [[ $HAVE_STORAGE == true ]]; then
   dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
   chmod 0400 /root/keyfile
   clear
+  echo "Type crypt password $STORAGE"
   cryptsetup -v luksAddKey $STORAGE /root/keyfile
 fi
 
 # My notebook
 if [[ $USERNAME == mamutal91 ]]; then
-  wget https://raw.githubusercontent.com/mamutal91/dotfiles/master/setup/packages.sh && chmod +x packages.sh
-  source packages.sh
-  for i in ${packages[@]}; do
-    pacman -Sy ${i} --needed --noconfirm
-  done
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
   sed -i 's/https/ssh/g' /home/mamutal91/.dotfiles/.git/config
   sed -i 's/github/git@github/g' /home/mamutal91/.dotfiles/.git/config
