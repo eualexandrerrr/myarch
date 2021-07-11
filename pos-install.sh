@@ -60,10 +60,13 @@ editor   no
 EOF
 
 # Configure grub
+sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/g' /etc/default/grub
 sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor nvidia-drm.modeset=1"/g' /etc/default/grub
 sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='${DISK3_UUID}':cryptsystem"/g' /etc/default/grub
 sed -i 's/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g' /etc/default/grub
-sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=0/g' /etc/default/grub
+sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=3/g' /etc/default/grub
+sed -i 's/#GRUB_SAVEDEFAULT=true/GRUB_SAVEDEFAULT=true/g' /etc/default/grub
+sed -i 's/#GRUB_DISABLE_SUBMENU=y/GRUB_DISABLE_SUBMENU=y/g' /etc/default/grub
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
@@ -88,14 +91,8 @@ fi
 sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 
-# Define passwords
-clear
-echo "Type password $USERNAME"
-passwd $USERNAME && clear
-echo "Type password root"
-passwd root
-
-if [[ $HAVE_STORAGE == true ]]; then
+# My notebook
+if [[ $USERNAME == mamutal91 ]]; then
   STORAGE_UUID=$(blkid $STORAGE | awk -F '"' '{print $2}')
   mkdir -p /mnt/storage
   echo -e "\nstorage UUID=$STORAGE_UUID /root/keyfile luks" >> /etc/crypttab
@@ -108,7 +105,13 @@ if [[ $HAVE_STORAGE == true ]]; then
   cryptsetup -v luksAddKey $STORAGE /root/keyfile
 fi
 
-# My notebook
+# Define passwords
+clear
+echo "Type user password $USERNAME"
+passwd $USERNAME && clear
+echo "Type user password root"
+passwd root
+
 if [[ $USERNAME == mamutal91 ]]; then
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
   sed -i 's/https/ssh/g' /home/mamutal91/.dotfiles/.git/config
