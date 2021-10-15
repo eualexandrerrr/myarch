@@ -47,9 +47,9 @@ else
       $STORAGE
     cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE
     if [[ $? -eq 0 ]]; then
-      echo "cryptsetup luksFormat SUCCESS {STORAGE}"
+      echo "cryptsetup luksFormat SUCCESS ${STORAGE}"
     else
-      echo "cryptsetup luksFormat FAILURE {STORAGE}"
+      echo "cryptsetup luksFormat FAILURE ${STORAGE}"
       exit 1
     fi
     cryptsetup luksOpen $STORAGE storage
