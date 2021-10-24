@@ -95,26 +95,26 @@ mountStorages() {
   # Storage 1
   STORAGE1_UUID=$(blkid $STORAGE1 | awk -F '"' '{print $2}')
   mkdir -p /mnt/storage
-  echo -e "\nstorage UUID=$STORAGE1_UUID /root/keyfile luks" >> /etc/crypttab
+  echo -e "\nstorage UUID=$STORAGE1_UUID /root/keyfile1 luks" >> /etc/crypttab
   echo -e "\n# Storage" >> /etc/fstab
   echo "/dev/mapper/storage  /mnt/storage     btrfs    defaults        0       2" >> /etc/fstab
-  dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
-  chmod 0400 /root/keyfile
+  dd if=/dev/urandom of=/root/keyfile1 bs=1024 count=4
+  chmod 0400 /root/keyfile1
   clear
   echo "Type crypt password $STORAGE1"
-  cryptsetup -v luksAddKey $STORAGE1 /root/keyfile
+  cryptsetup -v luksAddKey $STORAGE1 /root/keyfile1
 
   # Storage 2
   STORAGE2_UUID=$(blkid $STORAGE2 | awk -F '"' '{print $2}')
   mkdir -p /mnt/hdd
-  echo -e "\nstorage UUID=$STORAGE2_UUID /root/keyfile luks" >> /etc/crypttab
-  echo -e "\n# Storage" >> /etc/fstab
+  echo -e "\nhdd UUID=$STORAGE2_UUID /root/keyfile2 luks" >> /etc/crypttab
+  echo -e "\n# HDD" >> /etc/fstab
   echo "/dev/mapper/hdd  /mnt/hdd     btrfs    defaults        0       2" >> /etc/fstab
-  dd if=/dev/urandom of=/root/keyfile bs=1024 count=4
-  chmod 0400 /root/keyfile
+  dd if=/dev/urandom of=/root/keyfile2 bs=1024 count=4
+  chmod 0400 /root/keyfile2
   clear
   echo "Type crypt password $STORAGE2"
-  cryptsetup -v luksAddKey $STORAGE2 /root/keyfile
+  cryptsetup -v luksAddKey $STORAGE2 /root/keyfile2
 }
 
 if [[ $USERNAME == mamutal91 ]]; then
