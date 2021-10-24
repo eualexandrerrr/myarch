@@ -184,8 +184,8 @@ else
   sed -i "3i HOSTNAME=${HOSTNAME}" pos-install.sh
   sed -i "4i DISK2=${DISK2}" pos-install.sh
   sed -i "5i DISK3=${DISK3}" pos-install.sh
-  sed -i "6i STORAGE=${STORAGE1}" pos-install.sh
-  sed -i "7i STORAGE=${STORAGE2}" pos-install.sh
+  sed -i "6i STORAGE1=${STORAGE1}" pos-install.sh
+  sed -i "7i STORAGE2=${STORAGE2}" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
