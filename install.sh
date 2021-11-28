@@ -10,53 +10,56 @@ echo -e "$HOSTNAME\n"
 clear
 
 if [[ $USERNAME == mamutal91 ]]; then
-  DISK=/dev/sdb # ssd m2 sata
-  DISK1=/dev/sdb1 # EFI (boot)
-  DISK2=/dev/sdb2 # cryptswap
-  DISK3=/dev/sdb3 # cryptsystem
-  STORAGE1=/dev/nvme0n1 # storage
-  STORAGE2=/dev/sda # storage hdd
+  SSD=/dev/sdb # ssd m2 sata
+  SSD1=/dev/sdb1 # EFI (boot)
+  SSD2=/dev/sdb2 # cryptswap
+  SSD3=/dev/sdb3 # cryptsystem
+  STORAGE_NVME=/dev/nvme0n1 # nvme
+  STORAGE_HDD=/dev/sda # hdd
   askFormatStorages() {
-    echo -n "Você deseja formatar o storage ${STORAGE1} (nvme)? (y/n)? "; read answer
+    echo -n "Você deseja formatar o ${STORAGE_NVME} (nvme)? (y/n)? "; read answer
     if [[ $answer != ${answer#[Yy]} ]]; then
       echo -n "Você tem certeza? (y/n)? "; read answer
       if [[ $answer != ${answer#[Yy]} ]]; then
-        formatStorage1=true
+        formatNVME=true
       else
-        formatStorage1=false
-        echo No format ${STORAGE1}
+        formatNVME=false
+        echo No format ${STORAGE_NVME}
       fi
     else
-      echo No format ${STORAGE1}
+      echo No format ${STORAGE_NVME}
     fi
-    echo -n "Você deseja formatar o storage ${STORAGE2} (hdd)? (y/n)? "; read answer
+    echo -n "Você deseja formatar o ${STORAGE_HDD} (hdd)? (y/n)? "; read answer
     if [[ $answer != ${answer#[Yy]} ]]; then
       echo -n "Você tem certeza? (y/n)? "; read answer
       if [[ $answer != ${answer#[Yy]} ]]; then
-        formatStorage2=true
+        formatHDD=true
       else
-        formatStorage2=false
-        echo No format ${STORAGE2}
+        formatHDD=false
+        echo No format ${STORAGE_HDD}
       fi
     else
-      echo No format ${STORAGE2}
+      echo No format ${STORAGE_HDD}
     fi
   }
   askFormatStorages
 else
-  DISK=/dev/nvme0n1 # ssd m2 nvme
-  DISK1=/dev/nvme0n1p1 # EFI (boot)
-  DISK2=/dev/nvme0n1p2 # cryptswap
-  DISK3=/dev/nvme0n1p3 # cryptsystem
-  STORAGE1=/dev/sdb # storage
-  STORAGE2=/dev/sda # storage hdd
+  echo -e "Specify disks!!!
+  Examples:\n\n
+  SSD=/dev/nvme0n1 # ssd m2 nvme
+  SSD1=/dev/nvme0n1p1 # EFI (boot)
+  SSD2=/dev/nvme0n1p2 # cryptswap
+  SSD3=/dev/nvme0n1p3 # cryptsystem
+  STORAGE_NVME=/dev/sdb # ssd
+  STORAGE_HDD=/dev/sda # hdd"
+  exit 0
 fi
 
 [[ $USERNAME == mamutal91 ]] && git config --global user.email "mamutal91@gmail.com" && git config --global user.name "Alexandre Rangel"
 
 if [[ ${1} == recovery ]]; then
-  cryptsetup open $DISK3 system
-  cryptsetup open --type plain --key-file /dev/urandom $DISK2 swap
+  cryptsetup open $SSD3 system
+  cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
   o=defaults,x-mount.mkdir
@@ -64,54 +67,54 @@ if [[ ${1} == recovery ]]; then
   mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
   mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
   mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
-  mount $DISK1 /mnt/boot
+  mount $SSD1 /mnt/boot
   sleep 5
   arch-chroot /mnt
 else
   formatStorages() {
-    # Format and encrypt the storage partition 1
-    if [[ $formatStorage1 == true ]]; then
+    # Format and encrypt the nvme partition 1
+    if [[ $formatNVME == true ]]; then
       sgdisk -g --clear \
-        --new=1:0:0       --typecode=3:8300 --change-name=1:storage \
-        $STORAGE1
-      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE1
+        --new=1:0:0       --typecode=3:8300 --change-name=1:nvme \
+        $STORAGE_NVME
+      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE_NVME
       if [[ $? -eq 0 ]]; then
-        echo "cryptsetup luksFormat SUCCESS ${STORAGE1}"
+        echo "cryptsetup luksFormat SUCCESS ${STORAGE_NVME}"
       else
-        echo "cryptsetup luksFormat FAILURE ${STORAGE1}"
+        echo "cryptsetup luksFormat FAILURE ${STORAGE_NVME}"
         exit 1
       fi
-      cryptsetup luksOpen $STORAGE1 storage
-      mkfs.btrfs --force --label storage /dev/mapper/storage
-      cryptsetup luksOpen $STORAGE1 storage
+      cryptsetup luksOpen $STORAGE_NVME nvme
+      mkfs.btrfs --force --label nvme /dev/mapper/nvme
+      cryptsetup luksOpen $STORAGE_NVME nvme
     fi
 
-    # Format and encrypt the storage partition 1
-    if [[ $formatStorage2 == true ]]; then
+    # Format and encrypt the hdd partition 1
+    if [[ $formatHDD == true ]]; then
       sgdisk -g --clear \
         --new=1:0:0       --typecode=3:8300 --change-name=1:hdd \
-        $STORAGE2
-      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE2
+        $STORAGE_HDD
+      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE_HDD
       if [[ $? -eq 0 ]]; then
-        echo "cryptsetup luksFormat SUCCESS ${STORAGE2}"
+        echo "cryptsetup luksFormat SUCCESS ${STORAGE_HDD}"
       else
-        echo "cryptsetup luksFormat FAILURE ${STORAGE2}"
+        echo "cryptsetup luksFormat FAILURE ${STORAGE_HDD}"
         exit 1
       fi
-      cryptsetup luksOpen $STORAGE2 hdd
+      cryptsetup luksOpen $STORAGE_HDD hdd
       mkfs.btrfs --force --label hdd /dev/mapper/hdd
-      cryptsetup luksOpen $STORAGE2 hdd
+      cryptsetup luksOpen $STORAGE_HDD hdd
     fi
   }
   formatStorages
 
   # Format the drive
-  sgdisk --zap-all $DISK
+  sgdisk --zap-all $SSD
   sgdisk -g --clear \
     --new=1:0:+1GiB   --typecode=1:ef00 --change-name=1:EFI \
     --new=2:0:+8GiB   --typecode=2:8200 --change-name=2:cryptswap \
     --new=3:0:0       --typecode=3:8300 --change-name=3:cryptsystem \
-    $DISK
+    $SSD
     if [[ $? -eq 0 ]]; then
       echo "sgdisk SUCCESS"
   else
@@ -120,17 +123,17 @@ else
   fi
 
   # Encrypt the system partition
-  cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $DISK3
+  cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $SSD3
   if [[ $? -eq 0 ]]; then
     echo "cryptsetup luksFormat SUCCESS"
   else
     echo "cryptsetup luksFormat FAILURE"
     exit 1
   fi
-  cryptsetup open $DISK3 system
+  cryptsetup open $SSD3 system
 
   # Enable encrypted swap partition
-  cryptsetup open --type plain --key-file /dev/urandom $DISK2 swap
+  cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
 
@@ -152,7 +155,7 @@ else
   mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
   mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
   mkdir /mnt/boot
-  mount $DISK1 /mnt/boot
+  mount $SSD1 /mnt/boot
 
   # Discover the best mirros to download packages
   reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
@@ -173,7 +176,7 @@ else
   sed -i "s+LABEL=swap+/dev/mapper/cryptswap+" /mnt/etc/fstab
 
   # Add cryptab entry
-  echo "cryptswap $DISK2 /dev/urandom swap,offset=2048,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab
+  echo "cryptswap $SSD2 /dev/urandom swap,offset=2048,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab
 
   # Copy wifi connection to the system
   mkdir -p /mnt/var/lib/iwd
@@ -183,10 +186,10 @@ else
   # Arch Chroot
   sed -i "2i USERNAME=${USERNAME}" pos-install.sh
   sed -i "3i HOSTNAME=${HOSTNAME}" pos-install.sh
-  sed -i "4i DISK2=${DISK2}" pos-install.sh
-  sed -i "5i DISK3=${DISK3}" pos-install.sh
-  sed -i "6i STORAGE1=${STORAGE1}" pos-install.sh
-  sed -i "7i STORAGE2=${STORAGE2}" pos-install.sh
+  sed -i "4i SSD2=${SSD2}" pos-install.sh
+  sed -i "5i SSD3=${SSD3}" pos-install.sh
+  sed -i "6i STORAGE_NVME=${STORAGE_NVME}" pos-install.sh
+  sed -i "7i STORAGE_HDD=${STORAGE_HDD}" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then

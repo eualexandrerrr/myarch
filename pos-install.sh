@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Get the device uuid
-DISK2_UUID=$(blkid $DISK2 | awk -F '"' '{print $2}')
-DISK3_UUID=$(blkid $DISK3 | awk -F '"' '{print $2}')
+SSD2_UUID=$(blkid $SSD2 | awk -F '"' '{print $2}')
+SSD3_UUID=$(blkid $SSD3 | awk -F '"' '{print $2}')
 
 # Set user and hostname
 useradd -m -G wheel -s /bin/bash $USERNAME
@@ -48,7 +48,7 @@ cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
-options rd.luks.name=${DISK3_UUID}=system root=/dev/mapper/system rootflags=subvol=root rd.luks.options=discard rw
+options rd.luks.name=${SSD3_UUID}=system root=/dev/mapper/system rootflags=subvol=root rd.luks.options=discard rw
 EOF
 
 # generate the loader config
@@ -62,7 +62,7 @@ EOF
 # Configure grub
 sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/g' /etc/default/grub
 sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor nvidia-drm.modeset=1"/g' /etc/default/grub
-sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='${DISK3_UUID}':cryptsystem"/g' /etc/default/grub
+sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='${SSD3_UUID}':cryptsystem"/g' /etc/default/grub
 sed -i 's/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g' /etc/default/grub
 sed -i 's/#GRUB_SAVEDEFAULT=true/GRUB_SAVEDEFAULT=true/g' /etc/default/grub
 sed -i 's/#GRUB_DISABLE_SUBMENU=y/GRUB_DISABLE_SUBMENU=y/g' /etc/default/grub
@@ -93,28 +93,28 @@ sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /e
 # My notebook
 mountStorages() {
   # Storage 1
-  STORAGE1_UUID=$(blkid $STORAGE1 | awk -F '"' '{print $2}')
-  mkdir -p /mnt/storage
-  echo -e "\nstorage UUID=$STORAGE1_UUID /root/keyfileStorage1 luks" >> /etc/crypttab
-  echo -e "\n# Storage" >> /etc/fstab
-  echo "/dev/mapper/storage  /mnt/storage     btrfs    defaults        0       2" >> /etc/fstab
-  dd if=/dev/urandom of=/root/keyfileStorage1 bs=1024 count=4
-  chmod 0400 /root/keyfileStorage1
+  STORAGE_NVME_UUID=$(blkid $STORAGE_NVME | awk -F '"' '{print $2}')
+  mkdir -p /mnt/nvme
+  echo -e "\nnvme UUID=$STORAGE_NVME_UUID /root/keyNVME luks" >> /etc/crypttab
+  echo -e "# nvme" >> /etc/fstab
+  echo "/dev/mapper/nvme  /mnt/nvme     btrfs    defaults        0       2" >> /etc/fstab
+  dd if=/dev/urandom of=/root/keyNVME bs=1024 count=4
+  chmod 0400 /root/keyNVME
   clear
-  echo "Type crypt password $STORAGE1"
-  cryptsetup -v luksAddKey $STORAGE1 /root/keyfileStorage1
+  echo "Type crypt password $STORAGE_NVME"
+  cryptsetup -v luksAddKey $STORAGE_NVME /root/keyNVME
 
   # Storage 2
-  STORAGE2_UUID=$(blkid $STORAGE2 | awk -F '"' '{print $2}')
+  STORAGE_HDD_UUID=$(blkid $STORAGE_HDD | awk -F '"' '{print $2}')
   mkdir -p /mnt/hdd
-  echo -e "\nhdd UUID=$STORAGE2_UUID /root/keyfileStorage2 luks" >> /etc/crypttab
+  echo -e "\nhdd UUID=$STORAGE_HDD_UUID /root/keyHDD luks" >> /etc/crypttab
   echo -e "\n# HDD" >> /etc/fstab
   echo "/dev/mapper/hdd  /mnt/hdd     btrfs    defaults        0       2" >> /etc/fstab
-  dd if=/dev/urandom of=/root/keyfileStorage2 bs=1024 count=4
-  chmod 0400 /root/keyfileStorage2
+  dd if=/dev/urandom of=/root/keyHDD bs=1024 count=4
+  chmod 0400 /root/keyHDD
   clear
-  echo "Type crypt password $STORAGE2"
-  cryptsetup -v luksAddKey $STORAGE2 /root/keyfileStorage2
+  echo "Type crypt password $STORAGE_HDD"
+  cryptsetup -v luksAddKey $STORAGE_HDD /root/keyHDD
 }
 
 if [[ $USERNAME == mamutal91 ]]; then
