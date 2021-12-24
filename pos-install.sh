@@ -92,6 +92,18 @@ sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /e
 
 # My notebook
 mountStorages() {
+  # Storage 1
+  STORAGE_NVME_UUID=$(blkid $STORAGE_NVME | awk -F '"' '{print $2}')
+  mkdir -p /mnt/nvme
+  echo -e "\nnvme UUID=$STORAGE_NVME_UUID /root/keyNVME luks" >> /etc/crypttab
+  echo -e "# nvme" >> /etc/fstab
+  echo "/dev/mapper/nvme  /mnt/nvme     btrfs    defaults        0       2" >> /etc/fstab
+  dd if=/dev/urandom of=/root/keyNVME bs=1024 count=4
+  chmod 0400 /root/keyNVME
+  clear
+  echo "Type crypt password $STORAGE_NVME"
+  cryptsetup -v luksAddKey $STORAGE_NVME /root/keyNVME
+
   # Storage 2
   STORAGE_HDD_UUID=$(blkid $STORAGE_HDD | awk -F '"' '{print $2}')
   mkdir -p /mnt/hdd

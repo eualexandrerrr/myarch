@@ -10,12 +10,25 @@ echo -e "$HOSTNAME\n"
 clear
 
 if [[ $USERNAME == mamutal91 ]]; then
-  SSD=/dev/nvme0n1 # ssd m2 nvme
-  SSD1=/dev/nvme0n1p1 # EFI (boot)
-  SSD2=/dev/nvme0n1p2 # cryptswap
-  SSD3=/dev/nvme0n1p3 # cryptsystem
-  STORAGE_HDD=/dev/sda # hdd"
+  SSD=/dev/sdb # ssd m2 sata
+  SSD1=/dev/sdb1 # EFI (boot)
+  SSD2=/dev/sdb2 # cryptswap
+  SSD3=/dev/sdb3 # cryptsystem
+  STORAGE_NVME=/dev/nvme0n1 # nvme
+  STORAGE_HDD=/dev/sda # hdd
   askFormatStorages() {
+    echo -n "Você deseja formatar o ${STORAGE_NVME} (nvme)? (y/n)? "; read answer
+    if [[ $answer != ${answer#[Yy]} ]]; then
+      echo -n "Você tem certeza? (y/n)? "; read answer
+      if [[ $answer != ${answer#[Yy]} ]]; then
+        formatNVME=true
+      else
+        formatNVME=false
+        echo No format ${STORAGE_NVME}
+      fi
+    else
+      echo No format ${STORAGE_NVME}
+    fi
     echo -n "Você deseja formatar o ${STORAGE_HDD} (hdd)? (y/n)? "; read answer
     if [[ $answer != ${answer#[Yy]} ]]; then
       echo -n "Você tem certeza? (y/n)? "; read answer
@@ -59,6 +72,23 @@ if [[ ${1} == recovery ]]; then
   arch-chroot /mnt
 else
   formatStorages() {
+    # Format and encrypt the nvme partition 1
+    if [[ $formatNVME == true ]]; then
+      sgdisk -g --clear \
+        --new=1:0:0       --typecode=3:8300 --change-name=1:nvme \
+        $STORAGE_NVME
+      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE_NVME
+      if [[ $? -eq 0 ]]; then
+        echo "cryptsetup luksFormat SUCCESS ${STORAGE_NVME}"
+      else
+        echo "cryptsetup luksFormat FAILURE ${STORAGE_NVME}"
+        exit 1
+      fi
+      cryptsetup luksOpen $STORAGE_NVME nvme
+      mkfs.btrfs --force --label nvme /dev/mapper/nvme
+      cryptsetup luksOpen $STORAGE_NVME nvme
+    fi
+
     # Format and encrypt the hdd partition 1
     if [[ $formatHDD == true ]]; then
       sgdisk -g --clear \
@@ -158,7 +188,8 @@ else
   sed -i "3i HOSTNAME=${HOSTNAME}" pos-install.sh
   sed -i "4i SSD2=${SSD2}" pos-install.sh
   sed -i "5i SSD3=${SSD3}" pos-install.sh
-  sed -i "6i STORAGE_HDD=${STORAGE_HDD}" pos-install.sh
+  sed -i "6i STORAGE_NVME=${STORAGE_NVME}" pos-install.sh
+  sed -i "7i STORAGE_HDD=${STORAGE_HDD}" pos-install.sh
   chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
