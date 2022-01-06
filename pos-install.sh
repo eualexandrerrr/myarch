@@ -40,7 +40,7 @@ sed -i "s/AllowTcpForwarding no/AllowTcpForwarding yes/g" /etc/ssh/sshd_config
 # Generate the initramfs
 sed -i "s/BINARIES=()/BINARIES=(btrfs)/g" /etc/mkinitcpio.conf
 sed -i "s/block/block encrypt/g" /etc/mkinitcpio.conf
-mkinitcpio -P
+mkinitcpio --allpresets
 
 # Setup the bootloader
 # install bootloader
@@ -87,7 +87,7 @@ nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
 if [[ -n $nvidia ]]; then
   pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms opencl-nvidia --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
-  mkinitcpio -P
+  mkinitcpio --allpresets
 fi
 
 # Sudo configs
