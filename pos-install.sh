@@ -111,6 +111,12 @@ mountStorages() {
 
 if [[ $USERNAME == mamutal91 ]]; then
   mountStorages
+
+  # Zen kernel
+  pacman -S linux-zen linux-zen-headers --noconfirm
+  mkinitcpio -p linux-zen
+  grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
+  grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
 # Define passwords
