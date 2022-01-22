@@ -4,7 +4,7 @@ read -r -p "You username? " USERNAME
 [[ -z $USERNAME ]] && USERNAME=mamutal91 || USERNAME=$USERNAME
 echo -e "$USERNAME\n"
 read -r -p "You hostname? " HOSTNAME
-[[ -z $HOSTNAME ]] && HOSTNAME=odin || HOSTNAME=$HOSTNAME
+[[ -z $HOSTNAME ]] && HOSTNAME=modinx || HOSTNAME=$HOSTNAME
 echo -e "$HOSTNAME\n"
 
 clear

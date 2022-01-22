@@ -12,7 +12,7 @@ echo $HOSTNAME > /etc/hostname
 # Configure hosts
 echo "127.0.0.1	localhost
 ::1		localhost
-127.0.1.1	odin" | tee /etc/hosts
+127.0.1.1	modinx" | tee /etc/hosts
 
 # Discover the best mirros to download packages and update pacman configs
 reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
