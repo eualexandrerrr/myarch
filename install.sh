@@ -92,14 +92,16 @@ else
   fi
 
   # Encrypt the system partition
-  cryptsetup luksFormat --perf-no_read_workqueue --perf-no_write_workqueue --type luks2 --cipher aes-xts-plain64 --key-size 512 --iter-time 2000 --pbkdf argon2id --hash sha3-512 $SSD3
+  cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $SSD3
+  #cryptsetup luksFormat --perf-no_read_workqueue --perf-no_write_workqueue --type luks2 --cipher aes-xts-plain64 --key-size 512 --iter-time 2000 --pbkdf argon2id --hash sha3-512 $SSD3
   if [[ $? -eq 0 ]]; then
     echo "cryptsetup luksFormat SUCCESS"
   else
     echo "cryptsetup luksFormat FAILURE"
     exit 1
   fi
-  cryptsetup --allow-discards --perf-no_read_workqueue --perf-no_write_workqueue --persistent open $SSD3 system
+  cryptsetup open $SSD3 system
+  #cryptsetup --allow-discards --perf-no_read_workqueue --perf-no_write_workqueue --persistent open $SSD3 system
 
   # Enable encrypted swap partition
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
