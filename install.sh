@@ -4,7 +4,7 @@ read -r -p "You username? " USERNAME
 [[ -z $USERNAME ]] && USERNAME=mamutal91 || USERNAME=$USERNAME
 echo -e "$USERNAME\n"
 read -r -p "You hostname? " HOSTNAME
-[[ -z $HOSTNAME ]] && HOSTNAME=modinx || HOSTNAME=$HOSTNAME
+[[ -z $HOSTNAME ]] && HOSTNAME=nitro5 || HOSTNAME=$HOSTNAME
 echo -e "$HOSTNAME\n"
 
 clear
@@ -49,10 +49,10 @@ if [[ ${1} == recovery ]]; then
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
-  o_btrfs=defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag
-  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
-  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
-  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
+  args_btrfs=defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag
+  mount -t btrfs -o subvol=root,$args_btrfs LABEL=arch /mnt
+  mount -t btrfs -o subvol=home,$args_btrfs LABEL=arch /mnt/home
+  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=arch /mnt/.snapshots
   mount $SSD1 /mnt/boot
   sleep 5
   arch-chroot /mnt
@@ -113,17 +113,17 @@ else
   mkfs.btrfs --force --label system /dev/mapper/system
 
   # Create btrfs subvolumes
-  mount -t btrfs LABEL=system /mnt
+  mount -t btrfs LABEL=arch /mnt
   btrfs subvolume create /mnt/root
   btrfs subvolume create /mnt/home
   btrfs subvolume create /mnt/snapshots
 
   # Mount partitions
   umount -R /mnt
-  o_btrfs="defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag"
-  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
-  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
-  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
+  args_btrfs="defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag"
+  mount -t btrfs -o subvol=root,$args_btrfs LABEL=arch /mnt
+  mount -t btrfs -o subvol=home,$args_btrfs LABEL=arch /mnt/home
+  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=arch /mnt/.snapshots
   mkdir /mnt/boot
   mount $SSD1 /mnt/boot
 
@@ -135,7 +135,7 @@ else
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
   sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
 
-  # Install base system and some basic tools
+  # Install base and some basic tools
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion \
     linux-lts linux-lts-headers linux linux-headers \
@@ -152,7 +152,7 @@ else
   # Add cryptab entry
   echo "cryptswap $SSD2 /dev/urandom swap,offset=2048,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab
 
-  # Copy wifi connection to the system
+  # Copy wifi connection
   mkdir -p /mnt/var/lib/iwd
   chmod 700 /mnt/var/lib/iwd
   cp -rf /var/lib/iwd/*.psk /mnt/var/lib/iwd

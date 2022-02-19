@@ -12,7 +12,7 @@ echo $HOSTNAME > /etc/hostname
 # Configure hosts
 echo "127.0.0.1	localhost
 ::1		localhost
-127.0.1.1	modinx" | tee /etc/hosts
+127.0.1.1	nitro5" | tee /etc/hosts
 
 # Discover the best mirros to download packages and update pacman configs
 reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
@@ -23,7 +23,7 @@ sed -i 's/Color\\/Color/' /etc/pacman.conf && \
 sed -i 's/#TotalDownload/TotalDownload/' /etc/pacman.conf && \
 sed -i 's/#CheckSpace/CheckSpace/' /etc/pacman.conf
 sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
+sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 20/g" /etc/pacman.conf
 
 # Setup locate and time
 echo "KEYMAP=br-abnt2" > /etc/vconsole.conf
@@ -42,32 +42,12 @@ sed -i "s/AllowTcpForwarding no/AllowTcpForwarding yes/g" /etc/ssh/sshd_config
 
 # Generate the initramfs
 sed -i "s/BINARIES=()/BINARIES=(btrfs)/g" /etc/mkinitcpio.conf
-sed -i "s/block/block encrypt/g" /etc/mkinitcpio.conf
-
-sed -i 's/BINARIES=()/BINARIES=("\/usr\/bin\/btrfs")/' /etc/mkinitcpio.conf
-#sed -i 's/MODULES=()/MODULES=(amdgpu)/' /etc/mkinitcpio.conf
-sed -i 's/#COMPRESSION="lz4"/COMPRESSION="lz4"/' /etc/mkinitcpio.conf
-sed -i 's/#COMPRESSION_OPTIONS=()/COMPRESSION_OPTIONS=(-9)/' /etc/mkinitcpio.conf
-sed -i 's/^HOOKS.*/HOOKS=(base udev systemd autodetect modconf block sd-encrypt encrypt filesystems keyboard fsck)/' /etc/mkinitcpio.conf
+sed -i "s/block/block systemd sd-encrypt encrypt/g" /etc/mkinitcpio.conf
+sed -i "s/#COMPRESSION="lz4"/COMPRESSION="lz4"/g" /etc/mkinitcpio.conf
+sed -i "s/#COMPRESSION_OPTIONS=()/COMPRESSION_OPTIONS=(-9)/g" /etc/mkinitcpio.conf
 
 mkinitcpio -p linux-lts
 mkinitcpio -p linux
-
-# Optimize Makepkg
-sed -i 's/^CFLAGS.*/CFLAGS="-march=native -mtune=native -O2 -pipe -fstack-protector-strong --param=ssp-buffer-size=4 -fno-plt"/' /etc/makepkg.conf
-sed -i 's/^CXXFLAGS.*/CXXFLAGS="-march=native -mtune=native -O2 -pipe -fstack-protector-strong --param=ssp-buffer-size=4 -fno-plt"/' /etc/makepkg.conf
-sed -i 's/^#RUSTFLAGS.*/RUSTFLAGS="-C opt-level=2 -C target-cpu=native"/' /etc/makepkg.conf
-sed -i 's/^#BUILDDIR.*/BUILDDIR=\/tmp\/makepkg/' /etc/makepkg.conf
-sed -i 's/^#MAKEFLAGS.*/MAKEFLAGS="-j$(getconf _NPROCESSORS_ONLN) --quiet"/' /etc/makepkg.conf
-sed -i 's/^COMPRESSGZ.*/COMPRESSGZ=(pigz -c -f -n)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSBZ2.*/COMPRESSBZ2=(pbzip2 -c -f)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSXZ.*/COMPRESSXZ=(xz -T "$(getconf _NPROCESSORS_ONLN)" -c -z --best -)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSZST.*/COMPRESSZST=(zstd -c -z -q --ultra -T0 -22 -)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSLZ.*/COMPRESSLZ=(lzip -c -f)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSLRZ.*/COMPRESSLRZ=(lrzip -9 -q)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSLZO.*/COMPRESSLZO=(lzop -q --best)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSZ.*/COMPRESSZ=(compress -c -f)/' /etc/makepkg.conf
-sed -i 's/^COMPRESSLZ4.*/COMPRESSLZ4=(lz4 -q --best)/' /etc/makepkg.conf
 
 # Setup the bootloader
 bootctl --path=/boot install
@@ -78,7 +58,7 @@ cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
-options rd.luks.name=${SSD3_UUID}=system root=/dev/mapper/system rootflags=subvol=root rd.luks.options=discard rw
+options rd.luks.name=${SSD3_UUID}=arch root=/dev/mapper/arch rootflags=subvol=root rd.luks.options=discard rw
 EOF
 
 # Generate the loader config
