@@ -89,12 +89,14 @@ if [[ -n $nvidia ]]; then
     sed -i 's/acpi_backlight=vendor/acpi_backlight=vendor nvidia-drm.modeset=1/g' /etc/default/grub
   fi
   pwd=$(pwd)
-  git clone https://github.com/Frogging-Family/nvidia-all.git
-  cd nvidia-all
-  makepkg -si
+    rm -rf /tmp/nvidia-all
+    mkdir -p /tmp
+    git clone https://github.com/Frogging-Family/nvidia-all.git /tmp/nvidia-all
+    cd /tmp/nvidia-all
+    makepkg -si
   cd $pwd
-
-#  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia mesa mesa-demos vulkan-tools lib32-nvidia-utils lib32-opencl-nvidia lib32-virtualgl lib32-libvdpau lib32-opencl-nvidia lib32-mesa --noconfirm
+  pacman -S mesa mesa-demos vulkan-tools lib32-mesa lib32-virtualgl lib32-libvdpau --noconfirm
+#  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia lib32-nvidia-utils lib32-opencl-nvidia lib32-opencl-nvidia --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
   mkinitcpio -p linux-lts
 fi
