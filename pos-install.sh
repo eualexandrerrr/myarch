@@ -65,7 +65,7 @@ EOF
 
 # Configure grub
 sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/g' /etc/default/grub
-sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor nvidia-drm.modeset=1"/g' /etc/default/grub
+sed -i -e 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash acpi_backlight=vendor"/g' /etc/default/grub
 sed -i -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='${SSD3_UUID}':cryptsystem"/g' /etc/default/grub
 sed -i 's/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g' /etc/default/grub
 sed -i 's/#GRUB_SAVEDEFAULT=true/GRUB_SAVEDEFAULT=true/g' /etc/default/grub
@@ -85,7 +85,16 @@ systemctl enable iwd
 # graphics driver
 nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
 if [[ -n $nvidia ]]; then
-  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia mesa mesa-demos vulkan-tools lib32-nvidia-utils lib32-opencl-nvidia lib32-virtualgl lib32-libvdpau lib32-opencl-nvidia lib32-mesa --noconfirm
+  if [[ ! -n $(grep nvidia /etc/default/grub) ]]; then
+    sed -i 's/acpi_backlight=vendor/acpi_backlight=vendor nvidia-drm.modeset=1/g' /etc/default/grub
+  fi
+  pwd=$(pwd)
+  git clone https://github.com/Frogging-Family/nvidia-all.git
+  cd nvidia-all
+  makepkg -si
+  cd $pwd
+
+#  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia mesa mesa-demos vulkan-tools lib32-nvidia-utils lib32-opencl-nvidia lib32-virtualgl lib32-libvdpau lib32-opencl-nvidia lib32-mesa --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
   mkinitcpio -p linux-lts
 fi
@@ -111,12 +120,6 @@ mountStorages() {
 
 if [[ $USERNAME == mamutal91 ]]; then
   mountStorages
-
-  # Zen kernel
-  pacman -S linux-zen linux-zen-headers --noconfirm
-  mkinitcpio -p linux-zen
-  grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
-  grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
 # Define passwords
