@@ -85,7 +85,7 @@ systemctl enable iwd
 # graphics driver
 nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
 if [[ -n $nvidia ]]; then
-  pacman -S nvidia-lts nvidia-settings nvidia-utils nvidia-dkms nvidia-utils nvidia-prime opencl-nvidia mesa mesa-demos vulkan-tools lib32-nvidia-utils lib32-opencl-nvidia lib32-virtualgl lib32-nvidia-utils lib32-libvdpau lib32-opencl-nvidia lib32-mesa --noconfirm
+  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia mesa mesa-demos vulkan-tools lib32-nvidia-utils lib32-opencl-nvidia lib32-virtualgl lib32-libvdpau lib32-opencl-nvidia lib32-mesa --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
   mkinitcpio -p linux-lts
 fi

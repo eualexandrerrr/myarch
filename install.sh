@@ -137,7 +137,12 @@ else
 
   # Install base system and some basic tools
   pacstrap /mnt --noconfirm \
-    base base-devel bash-completion linux-lts linux-lts-headers linux-firmware mkinitcpio pacman-contrib \
+    base base-devel bash-completion \
+    linux linux-headers \
+    linux-lts linux-lts-headers \
+    linux-firmware linux-firmware-whence \
+    mkinitcpio pacman-contrib \
+    linux-api-headers util-linux util-linux-libs lib32-util-linux \
     btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
     iwd networkmanager dhcpcd sudo grub nano git reflector wget openssh zsh git curl wget
 
