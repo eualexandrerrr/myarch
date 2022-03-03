@@ -131,7 +131,6 @@ if [[ $USERNAME == mamutal91 ]]; then
   sed -i 's/github/git@github/g' /home/mamutal91/.dotfiles/.git/config
 fi
 
-
 run() {
   createUseraAndHost
   reflectorMirrors
