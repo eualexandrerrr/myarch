@@ -138,7 +138,6 @@ else
   # Install base system and some basic tools
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion \
-    linux linux-headers \
     linux-lts linux-lts-headers \
     linux-firmware linux-firmware-whence \
     mkinitcpio pacman-contrib \
