@@ -114,7 +114,11 @@ pacstrapInstall() {
     btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
     iwd networkmanager dhcpcd sudo nano reflector openssh git curl wget zsh \
     alsa-firmware alsa-utils alsa-plugins pulseaudio pulseaudio-bluetooth pavucontrol \
-    sox bluez bluez-libs bluez-tools bluez-utils feh rofi dunst picom
+    sox bluez bluez-libs bluez-tools bluez-utils feh rofi dunst picom \
+    stow nano nano-syntax-highlighting neofetch vlc gpicview zsh zsh-syntax-highlighting maim ffmpeg \
+    imagemagick slop terminus-font noto-fonts-emoji ttf-dejavu ttf-liberation \
+    xorg-server xorg-xrandr xorg-xbacklight xorg-xinit xorg-xprop xorg-server-devel xorg-xsetroot xclip xsel xautolock xorg-xdpyinfo xorg-xinput \
+    i3-gaps i3lock alacritty thunar thunar-archive-plugin thunar-media-tags-plugin thunar-volman telegram-desktop
 }
 
 genfstabGenerator() {
