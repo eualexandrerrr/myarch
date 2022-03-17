@@ -33,14 +33,11 @@ locale-gen
 ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
 
-# SSHD
-sed -i "s/#AllowTcpForwarding/AllowTcpForwarding/g" /etc/ssh/sshd_config
-sed -i "s/AllowTcpForwarding no/AllowTcpForwarding yes/g" /etc/ssh/sshd_config
-
 # Generate the initramfs
 sed -i "s/BINARIES=()/BINARIES=(btrfs)/g" /etc/mkinitcpio.conf
 sed -i "s/block/block encrypt/g" /etc/mkinitcpio.conf
 mkinitcpio -p linux-lts
+mkinitcpio -p linux
 
 # Setup the bootloader
 # install bootloader
@@ -87,6 +84,10 @@ nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
 if [[ -n $nvidia ]]; then
   if [[ ! -n $(grep nvidia /etc/default/grub) ]]; then
     sed -i 's/acpi_backlight=vendor/acpi_backlight=vendor nvidia-drm.modeset=1/g' /etc/default/grub
+  else
+    clear
+    echo "NAO RECONHECEU o grep da nvidia"
+    sleep 20
   fi
   pwd=$(pwd)
     rm -rf /tmp/nvidia-all
@@ -99,11 +100,12 @@ if [[ -n $nvidia ]]; then
 #  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia lib32-nvidia-utils lib32-opencl-nvidia lib32-opencl-nvidia --noconfirm
   sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
   mkinitcpio -p linux-lts
+  mkinitcpio -p linux
 fi
 
 # Sudo configs
-sed -i "s/root ALL=(ALL) ALL/root ALL=(ALL) NOPASSWD: ALL\n$USERNAME ALL=(ALL) NOPASSWD: ALL/g" /etc/sudoers
-sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL$/%wheel ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
+sed -i "s/root ALL=(ALL:ALL) ALL/root ALL=(ALL:ALL) NOPASSWD: ALL\n${USERNAME} ALL=(ALL:ALL) NOPASSWD: ALL/g" /etc/sudoers
+sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL$/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/' /etc/sudoers
 
 # My notebook
 mountStorages() {
