@@ -83,30 +83,6 @@ systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
 
-# graphics driver
-nvidia=$(lspci | grep -e VGA -e 3D | grep 'NVIDIA' 2> /dev/null || echo '')
-if [[ -n $nvidia ]]; then
-  if [[ ! -n $(grep nvidia /etc/default/grub) ]]; then
-    sed -i 's/acpi_backlight=vendor/acpi_backlight=vendor nvidia-drm.modeset=1/g' /etc/default/grub
-  else
-    clear
-    echo "NAO RECONHECEU o grep da nvidia"
-    sleep 20
-  fi
-  pwd=$(pwd)
-    rm -rf /tmp/nvidia-all
-    mkdir -p /tmp
-    git clone https://github.com/Frogging-Family/nvidia-all.git /tmp/nvidia-all
-    cd /tmp/nvidia-all
-    makepkg -si
-  cd $pwd
-  pacman -S mesa mesa-demos vulkan-tools lib32-mesa lib32-virtualgl lib32-libvdpau --noconfirm
-#  pacman -S nvidia nvidia-settings nvidia-utils nvidia-dkms nvidia-prime opencl-nvidia lib32-nvidia-utils lib32-opencl-nvidia lib32-opencl-nvidia --noconfirm
-  sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
-  mkinitcpio -p linux-lts
-  mkinitcpio -p linux
-fi
-
 # Sudo configs
 sed -i "s/root ALL=(ALL:ALL) ALL/root ALL=(ALL:ALL) NOPASSWD: ALL\n${USERNAME} ALL=(ALL:ALL) NOPASSWD: ALL/g" /etc/sudoers
 sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL$/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/' /etc/sudoers
