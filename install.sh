@@ -50,9 +50,9 @@ if [[ ${1} == recovery ]]; then
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
   args_btrfs=defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag
-  mount -t btrfs -o subvol=root,$args_btrfs LABEL=arch /mnt
-  mount -t btrfs -o subvol=home,$args_btrfs LABEL=arch /mnt/home
-  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=arch /mnt/.snapshots
+  mount -t btrfs -o subvol=root,$args_btrfs LABEL=system /mnt
+  mount -t btrfs -o subvol=home,$args_btrfs LABEL=system /mnt/home
+  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=system /mnt/.snapshots
   mount $SSD1 /mnt/boot
   sleep 5
   arch-chroot /mnt
@@ -93,7 +93,6 @@ else
 
   # Encrypt the system partition
   cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $SSD3
-  #cryptsetup luksFormat --perf-no_read_workqueue --perf-no_write_workqueue --type luks2 --cipher aes-xts-plain64 --key-size 512 --iter-time 2000 --pbkdf argon2id --hash sha3-512 $SSD3
   if [[ $? -eq 0 ]]; then
     echo "cryptsetup luksFormat SUCCESS"
   else
@@ -101,7 +100,6 @@ else
     exit 1
   fi
   cryptsetup open $SSD3 system
-  #cryptsetup --allow-discards --perf-no_read_workqueue --perf-no_write_workqueue --persistent open $SSD3 system
 
   # Enable encrypted swap partition
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
@@ -113,7 +111,7 @@ else
   mkfs.btrfs --force --label system /dev/mapper/system
 
   # Create btrfs subvolumes
-  mount -t btrfs LABEL=arch /mnt
+  mount -t btrfs LABEL=system /mnt
   btrfs subvolume create /mnt/root
   btrfs subvolume create /mnt/home
   btrfs subvolume create /mnt/snapshots
@@ -121,29 +119,40 @@ else
   # Mount partitions
   umount -R /mnt
   args_btrfs="defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag"
-  mount -t btrfs -o subvol=root,$args_btrfs LABEL=arch /mnt
-  mount -t btrfs -o subvol=home,$args_btrfs LABEL=arch /mnt/home
-  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=arch /mnt/.snapshots
+  mount -t btrfs -o subvol=root,$args_btrfs LABEL=system /mnt
+  mount -t btrfs -o subvol=home,$args_btrfs LABEL=system /mnt/home
+  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=system /mnt/.snapshots
   mkdir /mnt/boot
   mount $SSD1 /mnt/boot
 
   # Discover the best mirros to download packages
-  reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+  pacman -Sy reflector --noconfirm --needed
+  reflector --sort rate -l 5 --save /etc/pacman.d/mirrorlist
+  #reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
   sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-  sed -i "s/#Color/Color/g" /etc/pacman.conf
-  sed -i "s/#UseSyslog/UseSyslog/g" /etc/pacman.conf
+  sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf
+  sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf
+  sed -i 's/Color\\/Color/' /etc/pacman.conf
+  sed -i 's/#TotalDownload/TotalDownload/' /etc/pacman.conf
+  sed -i 's/#CheckSpace/CheckSpace/' /etc/pacman.conf
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 10/g" /etc/pacman.conf
+  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 3/g" /etc/pacman.conf
 
   # Install base and some basic tools
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion \
     linux-lts linux-lts-headers linux linux-headers \
     linux-firmware linux-firmware-whence \
-    mkinitcpio pacman-contrib \
+    mkinitcpio pacman-contrib archiso \
     linux-api-headers util-linux util-linux-libs lib32-util-linux \
     btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
-    iwd networkmanager dhcpcd sudo grub nano git reflector wget openssh zsh git curl wget
+    iwd networkmanager dhcpcd sudo nano reflector openssh git curl wget zsh \
+    alsa-firmware alsa-utils alsa-plugins pulseaudio pulseaudio-bluetooth pavucontrol \
+    sox bluez bluez-libs bluez-tools bluez-utils feh rofi dunst picom \
+    stow nano nano-syntax-highlighting neofetch vlc gpicview zsh zsh-syntax-highlighting maim ffmpeg \
+    imagemagick slop terminus-font noto-fonts-emoji ttf-dejavu ttf-liberation \
+    xorg-server xorg-xrandr xorg-xbacklight xorg-xinit xorg-xprop xorg-server-devel xorg-xsetroot xclip xsel xautolock xorg-xdpyinfo xorg-xinput \
+    atom i3-gaps i3lock alacritty thunar thunar-archive-plugin thunar-media-tags-plugin thunar-volman telegram-desktop
 
   # Generate fstab entries
   genfstab -L -p /mnt >> /mnt/etc/fstab
@@ -158,25 +167,27 @@ else
   cp -rf /var/lib/iwd/*.psk /mnt/var/lib/iwd
 
   # Arch Chroot
-  sed -i "2i USERNAME=${USERNAME}" pos-install.sh
-  sed -i "3i HOSTNAME=${HOSTNAME}" pos-install.sh
-  sed -i "4i SSD2=${SSD2}" pos-install.sh
-  sed -i "5i SSD3=${SSD3}" pos-install.sh
-  sed -i "6i STORAGE_HDD=${STORAGE_HDD}" pos-install.sh
-  chmod +x pos-install.sh
-  cp -rf pos-install.sh /mnt
+  sed -i "2i USERNAME=${USERNAME}" configure.sh
+  sed -i "3i HOSTNAME=${HOSTNAME}" configure.sh
+  sed -i "4i SSD2=${SSD2}" configure.sh
+  sed -i "5i SSD3=${SSD3}" configure.sh
+  sed -i "6i STORAGE_HDD=${STORAGE_HDD}" configure.sh
+  chmod +x configure.sh
+  cp -rf configure.sh /mnt
   clear
   sleep 5
-  arch-chroot /mnt ./pos-install.sh
+  arch-chroot /mnt ./configure.sh
   if [[ $? -eq 0 ]]; then
-    umount -R /mnt
     echo -e "\n\nFinished SUCCESS\n"
     read -r -p "Reboot now? [Y/n]" confirmReboot
     if [[ ! $confirmReboot =~ ^(n|N) ]]; then
+      umount -R /mnt
       reboot
+    else
+      arch-chroot /mnt
     fi
   else
-    echo "pos-install FAILURE"
+    echo "configure FAILURE"
     exit 1
   fi
 fi

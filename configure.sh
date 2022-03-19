@@ -12,15 +12,15 @@ echo $HOSTNAME > /etc/hostname
 # Configure hosts
 echo "127.0.0.1	localhost
 ::1		localhost
-127.0.1.1	nitro5" | tee /etc/hosts
+127.0.1.1	${HOSTNAME}" | tee /etc/hosts
 
 # Discover the best mirros to download packages and update pacman configs
 reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf && \
-sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf && \
-sed -i 's/Color\\/Color/' /etc/pacman.conf && \
-sed -i 's/#TotalDownload/TotalDownload/' /etc/pacman.conf && \
+sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf
+sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf
+sed -i 's/Color\\/Color/' /etc/pacman.conf
+sed -i 's/#TotalDownload/TotalDownload/' /etc/pacman.conf
 sed -i 's/#CheckSpace/CheckSpace/' /etc/pacman.conf
 sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
 sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 20/g" /etc/pacman.conf
@@ -36,29 +36,24 @@ locale-gen
 ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
 
-# SSHD
-sed -i "s/#AllowTcpForwarding/AllowTcpForwarding/g" /etc/ssh/sshd_config
-sed -i "s/AllowTcpForwarding no/AllowTcpForwarding yes/g" /etc/ssh/sshd_config
-
 # Generate the initramfs
 sed -i "s/BINARIES=()/BINARIES=(btrfs)/g" /etc/mkinitcpio.conf
-sed -i "s/block/block systemd sd-encrypt encrypt/g" /etc/mkinitcpio.conf
-sed -i "s/#COMPRESSION="lz4"/COMPRESSION="lz4"/g" /etc/mkinitcpio.conf
+sed -i "s/block/block encrypt/g" /etc/mkinitcpio.conf
+sed -i "s/#COMPRESSION=\"zstd\"/COMPRESSION=\"zstd\"/g" /etc/mkinitcpio.conf
 sed -i "s/#COMPRESSION_OPTIONS=()/COMPRESSION_OPTIONS=(-9)/g" /etc/mkinitcpio.conf
 
-mkinitcpio -p linux-lts
-mkinitcpio -p linux
+mkinitcpio -P
 
 # Setup the bootloader
 bootctl --path=/boot install
 
-# Generate the arch linux entry config
+# Generate the linux entry config
 mkdir -p /boot/loader/entries
 cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
-options rd.luks.name=${SSD3_UUID}=arch root=/dev/mapper/arch rootflags=subvol=root rd.luks.options=discard rw
+options rd.luks.name=${SSD3_UUID}=system root=/dev/mapper/system rootflags=subvol=root rd.luks.options=discard rw
 EOF
 
 # Generate the loader config
@@ -83,10 +78,22 @@ grub-mkconfig -o /boot/grub/grub.cfg
 sed -i 's/#HandleLidSwitch=suspend/HandleLidSwitch=ignore/g' /etc/systemd/logind.conf
 sed -i 's/#NAutoVTs=6/NAutoVTs=6/g' /etc/systemd/logind.conf
 
+# SSHD
+pwd=$(pwd)
+  rm -rf /etc/ssh/ssh_config
+  cd /etc/ssh
+  wget https://raw.githubusercontent.com/openssh/openssh-portable/master/ssh_config
+  chown -R root:root ssh_config
+cd $pwd
+sed -i "s/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g" /etc/ssh/ssh_config
+sed -i "s/#AllowAgentForwarding yes/AllowAgentForwarding yes/g" /etc/ssh/sshd_config
+sed -i "s/#AllowTcpForwarding yes/AllowTcpForwarding yes/g" /etc/ssh/sshd_config
+
 # Services
 systemctl disable NetworkManager
 systemctl enable dhcpcd
 systemctl enable iwd
+systemctl enable sshd.service
 
 # Sudo configs
 sed -i "s/root ALL=(ALL:ALL) ALL/root ALL=(ALL:ALL) NOPASSWD: ALL\n${USERNAME} ALL=(ALL:ALL) NOPASSWD: ALL/g" /etc/sudoers
@@ -126,3 +133,7 @@ if [[ $USERNAME == mamutal91 ]]; then
 fi
 
 chown -R $USERNAME:$USERNAME /home/$USERNAME
+
+clear
+cat /etc/ssh/ssh_config | grep StrictHostKeyChecking
+sleep 30
