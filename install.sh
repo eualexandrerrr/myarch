@@ -7,8 +7,8 @@ clear
 read -r -p "${BOL_GRE}You username? ${MAG}enter=${CYA}mamutal91${END}" USERNAME
 [[ -z $USERNAME ]] && USERNAME=mamutal91 || USERNAME=$USERNAME
 echo -e "  ${YEL}$USERNAME${END}\n"
-read -r -p "${BOL_GRE}You hostname? ${MAG}enter=${CYA}nitro5${END}" HOSTNAME
-[[ -z $HOSTNAME ]] && HOSTNAME=nitro5 || HOSTNAME=$HOSTNAME
+read -r -p "${BOL_GRE}You hostname? ${MAG}enter=${CYA}odin${END}" HOSTNAME
+[[ -z $HOSTNAME ]] && HOSTNAME=odin || HOSTNAME=$HOSTNAME
 echo -e "  ${YEL}$HOSTNAME${END}\n"
 
 askFormatStorage() {
