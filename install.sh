@@ -49,8 +49,7 @@ if [[ ${1} == recovery ]]; then
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
-  o=defaults,x-mount.mkdir
-  o_btrfs=$o,compress=lzo,ssd,noatime
+  o_btrfs=defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag
   mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
   mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
   mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
@@ -93,14 +92,14 @@ else
   fi
 
   # Encrypt the system partition
-  cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $SSD3
+  cryptsetup luksFormat --perf-no_read_workqueue --perf-no_write_workqueue --type luks2 --cipher aes-xts-plain64 --key-size 512 --iter-time 2000 --pbkdf argon2id --hash sha3-512 $SSD3
   if [[ $? -eq 0 ]]; then
     echo "cryptsetup luksFormat SUCCESS"
   else
     echo "cryptsetup luksFormat FAILURE"
     exit 1
   fi
-  cryptsetup open $SSD3 system
+  cryptsetup --allow-discards --perf-no_read_workqueue --perf-no_write_workqueue --persistent open $SSD3 system
 
   # Enable encrypted swap partition
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
@@ -118,9 +117,8 @@ else
   btrfs subvolume create /mnt/snapshots
 
   # Mount partitions
-  o=defaults,x-mount.mkdir
-  o_btrfs=$o,compress=lzo,ssd,noatime
   umount -R /mnt
+  o_btrfs="defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag"
   mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
   mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
   mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
@@ -163,7 +161,10 @@ else
   sed -i "4i SSD2=${SSD2}" pos-install.sh
   sed -i "5i SSD3=${SSD3}" pos-install.sh
   sed -i "6i STORAGE_HDD=${STORAGE_HDD}" pos-install.sh
-  chmod +x pos-install.sh && cp -rf pos-install.sh /mnt && clear
+  chmod +x pos-install.sh
+  cp -rf pos-install.sh /mnt
+  clear
+  sleep 5
   arch-chroot /mnt ./pos-install.sh
   if [[ $? -eq 0 ]]; then
     umount -R /mnt
