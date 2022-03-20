@@ -171,6 +171,7 @@ chrootPrepare() {
   sed -i "4i SSD2=${SSD2}" configure.sh
   sed -i "5i SSD3=${SSD3}" configure.sh
   sed -i "6i STORAGE_HDD=${STORAGE_HDD}" configure.sh
+  chmod +x colors.sh && cp -rf colors.sh /mnt
   chmod +x configure.sh && cp -rf configure.sh /mnt && clear && sleep 5
   arch-chroot /mnt ./configure.sh
   if [[ $? -eq 0 ]]; then
