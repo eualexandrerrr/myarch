@@ -49,7 +49,7 @@ if [[ ${1} == recovery ]]; then
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
-  args_btrfs=defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag
+  args_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
   mount -t btrfs -o subvol=root,$args_btrfs LABEL=system /mnt
   mount -t btrfs -o subvol=home,$args_btrfs LABEL=system /mnt/home
   mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=system /mnt/.snapshots
@@ -118,7 +118,7 @@ else
 
   # Mount partitions
   umount -R /mnt
-  args_btrfs="defaults,x-mount.mkdir,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd,discard=async,autodefrag"
+  args_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
   mount -t btrfs -o subvol=root,$args_btrfs LABEL=system /mnt
   mount -t btrfs -o subvol=home,$args_btrfs LABEL=system /mnt/home
   mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=system /mnt/.snapshots
