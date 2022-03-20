@@ -15,7 +15,7 @@ echo "127.0.0.1	localhost
 127.0.1.1	${HOSTNAME}" | tee /etc/hosts
 
 # Discover the best mirros to download packages and update pacman configs
-reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+reflector --verbose -c BR --protocol https --protocol http --sort rate --save /etc/pacman.d/mirrorlist
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf
 sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf
@@ -53,7 +53,7 @@ cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
-options rd.luks.name=${SSD3_UUID}=system root=/dev/mapper/system rootflags=subvol=root rd.luks.options=discard rw
+options rd.luks.name=${SSD3_UUID}=$DISK_NAME root=/dev/mapper/$DISK_NAME rootflags=subvol=root rd.luks.options=discard rw
 EOF
 
 # Generate the loader config
