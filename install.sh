@@ -9,29 +9,29 @@ echo -e "$HOSTNAME\n"
 
 clear
 
+askFormatStorage() {
+  echo -n "Você deseja formatar o hdd? (y/n)? [enter:no] "; read answer
+  if [[ $answer != ${answer#[Yy]} ]]; then
+    echo -n "Você tem certeza? (y/n)? "; read answer
+    if [[ $answer != ${answer#[Yy]} ]]; then
+      formatHDD="true"
+    else
+      formatHDD="false"
+      echo "OK OK! no format!"
+    fi
+  else
+    echo "Ok, no format!"
+  fi
+}
+
 if [[ $USERNAME == mamutal91 ]]; then
   SSD=/dev/nvme0n1 # ssd m2 nvme
   SSD1=/dev/nvme0n1p1 # EFI (boot)
   SSD2=/dev/nvme0n1p2 # cryptswap
   SSD3=/dev/nvme0n1p3 # cryptsystem
   STORAGE_HDD=/dev/sda # hdd"
-  askFormatStorages() {
-    echo -n "Você deseja formatar o ${STORAGE_HDD} (hdd)? (y/n)? "; read answer
-    if [[ $answer != ${answer#[Yy]} ]]; then
-      echo -n "Você tem certeza? (y/n)? "; read answer
-      if [[ $answer != ${answer#[Yy]} ]]; then
-        formatHDD=true
-      else
-        formatHDD=false
-        echo No format ${STORAGE_HDD}
-      fi
-    else
-      echo No format ${STORAGE_HDD}
-    fi
-  }
-  askFormatStorages
 else
-  echo -e "Specify disks!!!
+  echo -e "\n You need to adapt your disks...!!!\n
   Examples:\n\n
   SSD=/dev/nvme0n1 # ssd m2 nvme
   SSD1=/dev/nvme0n1p1 # EFI (boot)
@@ -39,44 +39,35 @@ else
   SSD3=/dev/nvme0n1p3 # cryptsystem
   STORAGE_NVME=/dev/sdb # ssd
   STORAGE_HDD=/dev/sda # hdd"
+  SSD=/dev/??? # ssd m2 nvme
+  SSD1=/dev//??? # EFI (boot)
+  SSD2=/dev//??? # cryptsystem
+  SSD3=/dev//??? # cryptsystem
+  STORAGE_HDD=/dev//??? # hdd"
   exit 0
 fi
 
-[[ $USERNAME == mamutal91 ]] && git config --global user.email "mamutal91@gmail.com" && git config --global user.name "Alexandre Rangel"
-
-if [[ ${1} == recovery ]]; then
-  cryptsetup open $SSD3 system
-  cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
-  mkswap -L swap /dev/mapper/swap
-  swapon -L swap
-  args_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
-  mount -t btrfs -o subvol=root,$args_btrfs LABEL=system /mnt
-  mount -t btrfs -o subvol=home,$args_btrfs LABEL=system /mnt/home
-  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=system /mnt/.snapshots
-  mount $SSD1 /mnt/boot
-  sleep 5
-  arch-chroot /mnt
-else
-  formatStorages() {
-    # Format and encrypt the hdd partition 1
-    if [[ $formatHDD == true ]]; then
-      sgdisk -g --clear \
-        --new=1:0:0       --typecode=3:8300 --change-name=1:hdd \
-        $STORAGE_HDD
-      cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE_HDD
-      if [[ $? -eq 0 ]]; then
-        echo "cryptsetup luksFormat SUCCESS ${STORAGE_HDD}"
-      else
-        echo "cryptsetup luksFormat FAILURE ${STORAGE_HDD}"
-        exit 1
-      fi
-      cryptsetup luksOpen $STORAGE_HDD hdd
-      mkfs.btrfs --force --label hdd /dev/mapper/hdd
-      cryptsetup luksOpen $STORAGE_HDD hdd
+formatStorage() {
+  # Format and encrypt the hdd partition 1
+  if [[ $formatHDD == true ]]; then
+    sgdisk -g --clear \
+      --new=1:0:0       --typecode=3:8300 --change-name=1:hdd \
+      $STORAGE_HDD
+    cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE_HDD
+    if [[ $? -eq 0 ]]; then
+      echo "cryptsetup luksFormat SUCCESS ${STORAGE_HDD}"
+    else
+      echo "cryptsetup luksFormat FAILURE ${STORAGE_HDD}"
+      exit 1
     fi
-  }
-  formatStorages
+    cryptsetup luksOpen $STORAGE_HDD hdd
+    mkfs.btrfs --force --label hdd /dev/mapper/hdd
+    cryptsetup luksOpen $STORAGE_HDD hdd
+  fi
+}
+formatStorage
 
+format() {
   # Format the drive
   sgdisk --zap-all $SSD
   sgdisk -g --clear \
@@ -118,17 +109,16 @@ else
 
   # Mount partitions
   umount -R /mnt
-  args_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
-  mount -t btrfs -o subvol=root,$args_btrfs LABEL=system /mnt
-  mount -t btrfs -o subvol=home,$args_btrfs LABEL=system /mnt/home
-  mount -t btrfs -o subvol=snapshots,$args_btrfs LABEL=system /mnt/.snapshots
+  o_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
+  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
+  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
+  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
   mkdir /mnt/boot
   mount $SSD1 /mnt/boot
 
   # Discover the best mirros to download packages
   pacman -Sy reflector --noconfirm --needed
   reflector --sort rate -l 5 --save /etc/pacman.d/mirrorlist
-  #reflector --verbose --country 'Brazil' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
   sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
   sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf
   sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf
@@ -143,9 +133,9 @@ else
     base base-devel bash-completion \
     linux-lts linux-lts-headers linux linux-headers \
     linux-firmware linux-firmware-whence \
-    mkinitcpio pacman-contrib archiso \
-    linux-api-headers util-linux util-linux-libs lib32-util-linux \
-    btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
+    mkinitcpio pacman-contrib zstd archiso \
+    linux-api-headers util-linux util-linux-libs lib32-util-linux pigz pbzip2 libvirt \
+    btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs sbsigntools \
     iwd networkmanager dhcpcd sudo nano reflector openssh git curl wget zsh \
     alsa-firmware alsa-utils alsa-plugins pulseaudio pulseaudio-bluetooth pavucontrol \
     sox bluez bluez-libs bluez-tools bluez-utils feh rofi dunst picom \
@@ -190,4 +180,24 @@ else
     echo "configure FAILURE"
     exit 1
   fi
+}
+
+recovery() {
+  cryptsetup open $SSD3 system
+  cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
+  mkswap -L swap /dev/mapper/swap
+  swapon -L swap
+  o_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
+  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
+  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
+  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
+  mount $SSD1 /mnt/boot
+  sleep 5
+  arch-chroot /mnt
+}
+
+if [[ ${1} == "recovery" ]]; then
+  recovery
+else
+  format
 fi
