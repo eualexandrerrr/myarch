@@ -53,7 +53,7 @@ cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
-options rd.luks.name=${SSD3_UUID}=system root=/dev/mapper/system rootflags=subvol=root rd.luks.options=discard rw
+options rd.luks.name=${SSD3_UUID}=$DISK_NAME root=/dev/mapper/$DISK_NAME rootflags=subvol=root rd.luks.options=discard rw
 EOF
 
 # Generate the loader config

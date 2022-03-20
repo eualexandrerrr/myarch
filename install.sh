@@ -7,10 +7,12 @@ read -r -p "You hostname? " HOSTNAME
 [[ -z $HOSTNAME ]] && HOSTNAME=nitro5 || HOSTNAME=$HOSTNAME
 echo -e "$HOSTNAME\n"
 
+DISK_NAME="crypt"
+
 clear
 
 askFormatStorage() {
-  echo -n "Você deseja formatar o hdd? (y/n)? [enter:no] "; read answer
+  echo -n "Você deseja formatar o hdd? (y/n)? [enter: no] "; read answer
   if [[ $answer != ${answer#[Yy]} ]]; then
     echo -n "Você tem certeza? (y/n)? "; read answer
     if [[ $answer != ${answer#[Yy]} ]]; then
@@ -30,6 +32,7 @@ if [[ $USERNAME == mamutal91 ]]; then
   SSD2=/dev/nvme0n1p2 # cryptswap
   SSD3=/dev/nvme0n1p3 # cryptsystem
   STORAGE_HDD=/dev/sda # hdd"
+  askFormatStorage
 else
   echo -e "\n You need to adapt your disks...!!!\n
   Examples:\n\n
@@ -83,6 +86,7 @@ format() {
   fi
 
   # Encrypt the system partition
+  echo -e "Encrypt the system partition"
   cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $SSD3
   if [[ $? -eq 0 ]]; then
     echo "cryptsetup luksFormat SUCCESS"
@@ -90,33 +94,39 @@ format() {
     echo "cryptsetup luksFormat FAILURE"
     exit 1
   fi
-  cryptsetup open $SSD3 system
+  echo -e "Open the disk crypt"
+  cryptsetup open $SSD3 $DISK_NAME
 
   # Enable encrypted swap partition
+  echo -e "Enable encrypted swap partition"
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
 
   # Format the partitions
+  echo -e "Format the partitions"
   mkfs.fat -F32 -n EFI /dev/disk/by-partlabel/EFI
-  mkfs.btrfs --force --label system /dev/mapper/system
+  mkfs.btrfs --force --label $DISK_NAME /dev/mapper/$DISK_NAME
 
   # Create btrfs subvolumes
-  mount -t btrfs LABEL=system /mnt
+  echo -e "Create btrfs subvolumes"
+  mount -t btrfs LABEL=$DISK_NAME /mnt
+  mkdir -p /mnt/{boot,home,.snapshots}
   btrfs subvolume create /mnt/root
   btrfs subvolume create /mnt/home
-  btrfs subvolume create /mnt/snapshots
+  btrfs subvolume create /mnt/.snapshots
+  umount /mnt
 
   # Mount partitions
-  umount -R /mnt
+  echo -e "Mount partitions"
   o_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
-  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
-  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
-  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
-  mkdir /mnt/boot
+  mount -t btrfs -o subvol=root,$o_btrfs LABEL=$DISK_NAME /mnt
+  mount -t btrfs -o subvol=home,$o_btrfs LABEL=$DISK_NAME /mnt/home
+  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=$DISK_NAME /mnt/.snapshots
   mount $SSD1 /mnt/boot
 
   # Discover the best mirros to download packages
+  echo -e "Discover the best mirros to download packages"
   pacman -Sy reflector --noconfirm --needed
   reflector --sort rate -l 5 --save /etc/pacman.d/mirrorlist
   sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -126,9 +136,10 @@ format() {
   sed -i 's/#TotalDownload/TotalDownload/' /etc/pacman.conf
   sed -i 's/#CheckSpace/CheckSpace/' /etc/pacman.conf
   sed -i "s/#VerbosePkgLists/VerbosePkgLists/g" /etc/pacman.conf
-  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 3/g" /etc/pacman.conf
+  sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 20/g" /etc/pacman.conf
 
   # Install base and some basic tools
+  echo -e "Install pacstrap"
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion \
     linux-lts linux-lts-headers linux linux-headers \
@@ -162,6 +173,7 @@ format() {
   sed -i "4i SSD2=${SSD2}" configure.sh
   sed -i "5i SSD3=${SSD3}" configure.sh
   sed -i "6i STORAGE_HDD=${STORAGE_HDD}" configure.sh
+  sed -i "6i DISK_NAME=${DISK_NAME}" configure.sh
   chmod +x configure.sh
   cp -rf configure.sh /mnt
   clear
@@ -183,14 +195,14 @@ format() {
 }
 
 recovery() {
-  cryptsetup open $SSD3 system
+  cryptsetup open $SSD3 $DISK_NAME
   cryptsetup open --type plain --key-file /dev/urandom $SSD2 swap
   mkswap -L swap /dev/mapper/swap
   swapon -L swap
   o_btrfs="noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
-  mount -t btrfs -o subvol=root,$o_btrfs LABEL=system /mnt
-  mount -t btrfs -o subvol=home,$o_btrfs LABEL=system /mnt/home
-  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=system /mnt/.snapshots
+  mount -t btrfs -o subvol=root,$o_btrfs LABEL=$DISK_NAME /mnt
+  mount -t btrfs -o subvol=home,$o_btrfs LABEL=$DISK_NAME /mnt/home
+  mount -t btrfs -o subvol=snapshots,$o_btrfs LABEL=$DISK_NAME /mnt/.snapshots
   mount $SSD1 /mnt/boot
   sleep 5
   arch-chroot /mnt
