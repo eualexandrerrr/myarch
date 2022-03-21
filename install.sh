@@ -11,36 +11,11 @@ read -r -p "${BOL_GRE}You hostname? ${MAG}enter=${CYA}odin${END}" HOSTNAME
 [[ -z $HOSTNAME ]] && HOSTNAME=odin || HOSTNAME=$HOSTNAME
 echo -e "  ${YEL}$HOSTNAME${END}\n"
 
-askFormatStorage() {
-  echo -n "${BOL_GRE}Você deseja formatar o ${STORAGE_HDD} (hdd)? (y/n)? ${MAG}enter=${CYA}no${END}"; read answer
-  if [[ $answer != ${answer#[Yy]} ]]; then
-    echo -n "${GRE}Você tem certeza? (y/n)? ${END}"; read answer
-    if [[ $answer != ${answer#[Yy]} ]]; then
-      formatHDD=true
-    else
-      formatHDD=false
-      echo "  ${YEL}No format ${STORAGE_HDD}${END}"
-    fi
-  else
-    echo "  ${YEL}No format ${STORAGE_HDD}${END}"
-  fi
-}
-
 if [[ $USERNAME == mamutal91 ]]; then
   SSD=/dev/nvme0n1 # ssd m2 nvme
   SSD1=/dev/nvme0n1p1 # EFI (boot)
   SSD2=/dev/nvme0n1p2 # cryptswap
   SSD3=/dev/nvme0n1p3 # cryptsystem
-  STORAGE_HDD=/dev/sda # hdd"
-
-  # Use este
-  SSD=/dev/sdb # ssd m2
-  SSD1=/dev/sdb1 # EFI (boot)
-  SSD2=/dev/sdb2 # cryptswap
-  SSD3=/dev/sdb3 # cryptsystem
-  STORAGE_HDD=/dev/sda # hdd"
-
-  askFormatStorage # Yes, i have store hdd
 else
   echo -e "Specify disks!!!
   Examples:\n\n
@@ -52,24 +27,6 @@ else
   STORAGE_HDD=/dev/sda # hdd"
   exit 0
 fi
-
-formatStorage() {
-  if [[ $formatHDD == true ]]; then
-  sgdisk -g --clear \
-    --new=1:0:0   --typecode=3:8300 --change-name=1:hdd \
-    $STORAGE_HDD
-  cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 $STORAGE_HDD
-  if [[ $? -eq 0 ]]; then
-    echo "cryptsetup luksFormat SUCCESS ${STORAGE_HDD}"
-  else
-    echo "cryptsetup luksFormat FAILURE ${STORAGE_HDD}"
-    exit 1
-  fi
-  cryptsetup luksOpen $STORAGE_HDD hdd
-  mkfs.btrfs --force --label hdd /dev/mapper/hdd
-  cryptsetup luksOpen $STORAGE_HDD hdd
-  fi
-}
 
 formatDrive() {
   echo -e "\n${BOL_GRE}Formatando $SSD ${END}"
@@ -178,7 +135,6 @@ chrootPrepare() {
   sed -i "3i HOSTNAME=${HOSTNAME}" configure.sh
   sed -i "4i SSD2=${SSD2}" configure.sh
   sed -i "5i SSD3=${SSD3}" configure.sh
-  sed -i "6i STORAGE_HDD=${STORAGE_HDD}" configure.sh
   chmod +x colors.sh && cp -rf colors.sh /mnt
   chmod +x configure.sh && cp -rf configure.sh /mnt && clear && sleep 5
   arch-chroot /mnt ./configure.sh

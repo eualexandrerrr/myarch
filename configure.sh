@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
+source colors.sh
+
 # Get the device uuid
 SSD2_UUID=$(blkid $SSD2 | awk -F '"' '{print $2}')
 SSD3_UUID=$(blkid $SSD3 | awk -F '"' '{print $2}')
-
-source colors.sh
 
 createUseraAndHost() {
   useradd -m -G wheel -s /bin/bash $USERNAME
@@ -17,7 +17,7 @@ createUseraAndHost() {
 }
 
 reflectorMirrors() {
-  reflector --verbose -c BR --protocol https --protocol http --sort rate --save /etc/pacman.d/mirrorlist
+#  reflector --verbose -c BR --protocol https --protocol http --sort rate --save /etc/pacman.d/mirrorlist
   sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
   sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf
   sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf
@@ -103,19 +103,6 @@ sudoersConfigs() {
   echo "Defaults timestamp_timeout=0" >> /etc/sudoers
 }
 
-mountStorage() {
-  STORAGE_HDD_UUID=$(blkid $STORAGE_HDD | awk -F '"' '{print $2}')
-  mkdir -p /mnt/hdd
-  echo -e "\nhdd UUID=$STORAGE_HDD_UUID /root/keyHDD luks" >> /etc/crypttab
-  echo -e "\n# HDD" >> /etc/fstab
-  echo "/dev/mapper/hdd  /mnt/hdd     btrfs    defaults        0       2" >> /etc/fstab
-  dd if=/dev/urandom of=/root/keyHDD bs=1024 count=4
-  chmod 0400 /root/keyHDD
-  clear
-  echo -e "\n${BOL_GRE}Digite a senha destravar o ${MAG}${STORAGE_HDD}${END}"
-  cryptsetup -v luksAddKey $STORAGE_HDD /root/keyHDD
-}
-
 passwords() {
   clear
   echo -e "\n${BOL_GRE}Digite a senha para ${MAG}${USERNAME}${END}"
@@ -125,7 +112,6 @@ passwords() {
 }
 
 if [[ $USERNAME == mamutal91 ]]; then
-  mountStorage
   git clone https://github.com/mamutal91/dotfiles /home/mamutal91/.dotfiles
   sed -i 's/https/ssh/g' /home/mamutal91/.dotfiles/.git/config
   sed -i 's/github/git@github/g' /home/mamutal91/.dotfiles/.git/config
