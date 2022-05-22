@@ -168,7 +168,6 @@ recovery() {
 }
 
 run() {
-  formatStorage
   formatDrive
   encryptSystem
   unlockDisk
