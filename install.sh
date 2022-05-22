@@ -92,7 +92,7 @@ mountPartitions() {
 
 reflectorMirrors() {
   pacman -Sy reflector --noconfirm --needed
-  #reflector --verbose --sort rate -l 5 --save /etc/pacman.d/mirrorlist
+  reflector --verbose --sort rate -l 5 --save /etc/pacman.d/mirrorlist
   sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
   sed -i 's/#UseSyslog/UseSyslog/' /etc/pacman.conf
   sed -i 's/#Color/Color\\\nILoveCandy/' /etc/pacman.conf
