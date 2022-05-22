@@ -17,10 +17,10 @@ if [[ $USERNAME == mamutal91 ]]; then
   SSD2=/dev/nvme0n1p2 # cryptswap
   SSD3=/dev/nvme0n1p3 # cryptsystem
   # Use este
-  SSD=/dev/sdb # ssd m2
-  SSD1=/dev/sdb1 # EFI (boot)
-  SSD2=/dev/sdb2 # cryptswap
-  SSD3=/dev/sdb3 # cryptsystem
+  SSD=/dev/sda # ssd m2
+  SSD1=/dev/sda1 # EFI (boot)
+  SSD2=/dev/sda2 # cryptswap
+  SSD3=/dev/sda3 # cryptsystem
 else
   echo -e "Specify disks!!!
   Examples:\n\n
