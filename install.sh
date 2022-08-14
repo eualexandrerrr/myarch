@@ -104,11 +104,12 @@ reflectorMirrors() {
 }
 
 pacstrapInstall() {
+  pacman -Sy arch-keyring git --noconfirm --needed
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion archlinux-keyring \
     linux-lts linux-lts-headers linux linux-headers \
     linux-firmware linux-firmware-whence \
-    mkinitcpio pacman-contrib archiso \
+    mkinitcpio pacman-contrib archiso git \
     linux-api-headers util-linux util-linux-libs lib32-util-linux \
     btrfs-progs efibootmgr efitools gptfdisk grub grub-btrfs \
     iwd networkmanager dhcpcd sudo nano reflector openssh git curl wget zsh \
