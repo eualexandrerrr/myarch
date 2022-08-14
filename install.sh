@@ -104,7 +104,7 @@ reflectorMirrors() {
 }
 
 pacstrapInstall() {
-  pacman -Sy arch-keyring git --noconfirm --needed
+  pacman -Sy archlinux-keyring git --noconfirm --needed
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion archlinux-keyring \
     linux-lts linux-lts-headers linux linux-headers \
