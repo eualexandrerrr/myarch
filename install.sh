@@ -79,7 +79,7 @@ createSubVolumesBtrfs() {
 }
 
 mountPartitions() {
-  echo -e "\n${BOL_GRE} volumes ${END}"
+  echo -e "\n${BOL_GRE}Montando volumes ${END}"
   o="defaults,x-mount.mkdir"
   o_btrfs="$o,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
   umount -R /mnt
