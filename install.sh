@@ -71,7 +71,7 @@ formatPartitions() {
 }
 
 createSubVolumesBtrfs() {
-  echo -e "\n${BOL_GRE}Criando volumes ${END}"
+  echo -e "\n${BOL_GRE}Criando volumes${END}"
   mount -t btrfs LABEL=system /mnt
   btrfs subvolume create /mnt/root
   btrfs subvolume create /mnt/home
@@ -79,7 +79,7 @@ createSubVolumesBtrfs() {
 }
 
 mountPartitions() {
-  echo -e "\n${BOL_GRE}Montando volumes ${END}"
+  echo -e "\n${BOL_GRE}Montando volumes${END}"
   o="defaults,x-mount.mkdir"
   o_btrfs="$o,noatime,compress-force=zstd,commit=120,space_cache=v2,ssd"
   umount -R /mnt
@@ -91,6 +91,7 @@ mountPartitions() {
 }
 
 reflectorMirrors() {
+  echo -e "\n${BOL_GRE}Instalando reflector para obter melhores mirrors${END}"
   pacman -Sy reflector --noconfirm --needed
   reflector --verbose --sort rate -l 5 --save /etc/pacman.d/mirrorlist
   sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
