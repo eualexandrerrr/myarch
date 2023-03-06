@@ -150,12 +150,12 @@ chrootPrepare() {
     read -r -p "Reboot now? [Y/n]" confirmReboot
     if [[ ! $confirmReboot =~ ^(n|N) ]]; then
       umount -R /mnt
-      reboot
+      systemctl reboot
     else
       arch-chroot /mnt
     fi
   else
-    echo "${BOL_RED}TUDO FALHOU!!!${END}"
+    echo "${BOL_RED}Failed!!!${END}"
     exit 1
   fi
 }
