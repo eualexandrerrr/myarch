@@ -109,6 +109,7 @@ pacstrapInstall() {
   pacstrap /mnt --noconfirm \
     base base-devel bash-completion archlinux-keyring \
     linux-lts linux-lts-headers linux linux-headers \
+    linux-hardened linux-hardened-headers \
     linux-firmware linux-firmware-whence \
     mkinitcpio pacman-contrib archiso git \
     linux-api-headers util-linux util-linux-libs lib32-util-linux \
